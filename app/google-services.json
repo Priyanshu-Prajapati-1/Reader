@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "190522513536",
+    "project_id": "reader-compose-ee1c8",
+    "storage_bucket": "reader-compose-ee1c8.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190522513536:android:a5202d23d9f7784d97ae65",
+        "android_client_info": {
+          "package_name": "com.example.reader"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCI7NEK85GJP7E3mEpHs6TSaVNn7_7sc2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
