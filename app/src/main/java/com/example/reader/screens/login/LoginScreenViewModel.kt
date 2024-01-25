@@ -1,14 +1,14 @@
 package com.example.reader.screens.login
 
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.reader.model.MUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
@@ -21,24 +21,57 @@ class LoginScreenViewModel : ViewModel() {
 
 
     // run away from main thread.
-    fun signInWithEmailAndPassword(email: String, password: String) = viewModelScope.launch {
-        try {
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.d("FBR", "signInWithEmailAndPassword: ye ${task.result}")
-                        // TODO: ("take them home Screen")
-                    } else {
-                        Log.d("FB r", "signInWithEmailAndPassword: ${task.result}")
+    fun signInWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
+        viewModelScope.launch {
+            try {
+                auth.signInWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Log.d("FB", "signInWithEmailAndPassword: ye ${task.result}")
+                            // TODO: ("take them home Screen")
+                            home()
+                        } else {
+                            Log.d("FB", "signInWithEmailAndPassword: ${task.result}")
+                        }
                     }
-                }
-        } catch (ex: Exception) {
-            Log.d("FB", "SignInWithEmailAndPassword: ${ex.message}")
+            } catch (ex: Exception) {
+                Log.d("FB", "SignInWithEmailAndPassword: ${ex.message}")
+            }
         }
-    }
 
     // run away from main thread.
-    fun createUserWithEmailAndPassword(email: String, password: String) = viewModelScope.launch {
+    fun createUserWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
+        viewModelScope.launch {
 
+            if (_loading.value == false) {
+                _loading.value = true
+                auth.createUserWithEmailAndPassword(email, password)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // me@gmail.com
+                            val displayName = task.result.user?.email?.split("@")?.get(0)
+                            createUser(displayName)
+                            home()
+                        } else {
+                            Log.d("FB r", "createWithEmailAndPassword: ${task.result}")
+                        }
+                        _loading.value = false
+                    }
+            }
+        }
+
+    private fun createUser(displayName: String?) {
+        val userId = auth.currentUser?.uid
+        val user = MUser(
+            userId = userId.toString(),
+            displayName = displayName.toString(),
+            avatarUrl = "",
+            quote = "life is grate",
+            profession = "Android developer",
+            id = null,
+        ).toMap()
+
+        FirebaseFirestore.getInstance().collection("users")
+            .add(user)
     }
 }

@@ -51,12 +51,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.reader.R
 import com.example.reader.components.EmailInput
 import com.example.reader.components.ReaderLogo
+import com.example.reader.navigation.ReaderScreens
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun LoginScreen(
     navController: NavController,
@@ -66,6 +67,8 @@ fun LoginScreen(
     val showLoginForm = rememberSaveable {
         mutableStateOf(true)
     }
+
+
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -86,22 +89,31 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
             )
-
             if (showLoginForm.value) {
                 UserForm(
                     loading = false,
-                    isCreateAccount = false
+                    isCreateAccount = false,
                 ) { email, password ->
                     Log.d("FBR", "signInWithEmailAndPassword: ye $email and $password")
                     // TODO: FireBase Login
-                    viewModel.signInWithEmailAndPassword(email, password)
+                    viewModel.signInWithEmailAndPassword(email, password) {
+                        navController.navigate(ReaderScreens.HomeScreen.name) {
+                            popUpTo(0)
+                        }
+                    }
                 }
             } else {
                 UserForm(
                     loading = false,
-                    isCreateAccount = true
-                ) { email, password ->
+                    isCreateAccount = true,
+                )
+                { email, password ->
                     // TODO: create FireBase account
+                    viewModel.createUserWithEmailAndPassword(email, password) {
+                        navController.navigate(ReaderScreens.HomeScreen.name) {
+                            popUpTo(0)
+                        }
+                    }
                 }
             }
 
@@ -112,7 +124,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val text = if (showLoginForm.value) "Sign Up" else "Login"
-                Text(text = "New User?")
+                Text(text = if(showLoginForm.value) "New User? " else "Have Account: ")
                 Text(
                     text = text,
                     modifier = Modifier
@@ -137,7 +149,7 @@ fun LoginScreen(
 fun UserForm(
     loading: Boolean = false,
     isCreateAccount: Boolean = false,
-    onDone: (String, String) -> Unit = { email, pass -> }
+    onDone: (String, String) -> Unit = { email, pass -> },
 ) {
 
     val email = rememberSaveable { mutableStateOf("") }
@@ -197,7 +209,7 @@ fun UserForm(
         SubmitButton(
             textId = if (isCreateAccount) "Create Account" else "Login",
             loading = loading,
-            validInputs = valid
+            validInputs = valid,
         ) {
             onDone(email.value.trim(), password.value.trim())
             keyboardController?.hide()
@@ -212,8 +224,15 @@ fun SubmitButton(
     validInputs: Boolean,
     onClick: () -> Unit
 ) {
+    val isCircularLoading = rememberSaveable {
+        mutableStateOf(false)
+    }
+
     Button(
-        onClick = onClick,
+        onClick = {
+            isCircularLoading.value = !isCircularLoading.value
+            onClick()
+        },
         modifier = Modifier
             .padding(20.dp)
 //            .height(50.dp)
@@ -226,12 +245,14 @@ fun SubmitButton(
         shape = CircleShape,
 
         ) {
-        if (loading) CircularProgressIndicator(modifier = Modifier.size(25.dp))
-        else Text(
-            text = textId,
-            modifier = Modifier.padding(5.dp),
-            color = MaterialTheme.colorScheme.onBackground
-        )
+        if (isCircularLoading.value) CircularProgressIndicator(modifier = Modifier.size(25.dp))
+        else {
+            Text(
+                text = textId,
+                modifier = Modifier.padding(5.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }
 
