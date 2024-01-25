@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.reader.screens.SplashScreen
 import com.example.reader.screens.home.HomeScreen
 import com.example.reader.screens.login.LoginScreen
+import com.example.reader.screens.search.SearchScreen
 import com.example.reader.screens.stats.StatsScreen
 
 @Composable
@@ -32,6 +33,10 @@ fun ReaderNavigation() {
 
         composable(ReaderScreens.StatsScreen.name) {
             StatsScreen(navController = navController)
+        }
+
+        composable(ReaderScreens.SearchScreen.name) {
+            SearchScreen(navController = navController)
         }
     }
 }
