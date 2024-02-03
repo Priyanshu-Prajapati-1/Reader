@@ -92,9 +92,20 @@ dependencies {
     // for more Icons
     implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
+    // Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+
+    // OkHttp
+    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
+
+    // Json converter
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     implementation ("androidx.compose.ui:ui:1.5.4")
+    implementation("androidx.compose.ui:ui-tooling:1.5.4")
+    implementation ("androidx.compose.material:material:1.5.4")
     implementation ("androidx.compose.material3:material3:1.1.2")
     implementation ("androidx.navigation:navigation-compose:2.7.6")
     implementation("androidx.compose.animation:animation-android:1.5.4")
@@ -114,4 +125,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    
+
+    // preview
+//    debugImplementation("androidx.compose.ui:ui-tooling-preview:1.6.0")
 }

@@ -1,6 +1,9 @@
 package com.example.reader.screens.login
 
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,21 +22,25 @@ class LoginScreenViewModel : ViewModel() {
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
 
+    val onError = mutableStateOf(false)
 
     // run away from main thread.
     fun signInWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
         viewModelScope.launch {
+
             try {
                 auth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
+                    .addOnCompleteListener() { task ->
                         if (task.isSuccessful) {
                             Log.d("FB", "signInWithEmailAndPassword: ye ${task.result}")
                             // TODO: ("take them home Screen")
                             home()
                         } else {
-                            Log.d("FB", "signInWithEmailAndPassword: ${task.result}")
+                            onError.value = true
+                            Log.w("onError", "signInWithEmail:failure", task.exception)
                         }
                     }
+
             } catch (ex: Exception) {
                 Log.d("FB", "SignInWithEmailAndPassword: ${ex.message}")
             }

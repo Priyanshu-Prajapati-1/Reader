@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Reader</string>
     <string name="create_Account">Please enter a valid email and password that is at least 6 characters</string>
+    <string name="email_password">Please enter a valid email and password that is at least 6 characters \n- Email: abc@gmail.com \n- Password: ****** </string>
 </resources>

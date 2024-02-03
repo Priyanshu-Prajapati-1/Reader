@@ -31,7 +31,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +57,7 @@ import com.example.reader.R
 import com.example.reader.components.EmailInput
 import com.example.reader.components.ReaderLogo
 import com.example.reader.navigation.ReaderScreens
+import com.example.reader.utils.checkEmailAndPassword
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -69,6 +69,7 @@ fun LoginScreen(
     val showLoginForm = rememberSaveable {
         mutableStateOf(true)
     }
+
 
 
 
@@ -95,8 +96,16 @@ fun LoginScreen(
                 UserForm(
                     loading = false,
                     isCreateAccount = false,
+                    onWrongEmailPassword = false
                 ) { email, password ->
                     Log.d("FBR", "signInWithEmailAndPassword: ye $email and $password")
+
+//                    if(checkEmailAndPassword(email, password)){
+//                        onWrongEmailPassword.value = false
+//                    }else{
+//                        onWrongEmailPassword.value = true
+//                    }
+
                     // TODO: FireBase Login
                     viewModel.signInWithEmailAndPassword(email, password) {
                         navController.navigate(ReaderScreens.HomeScreen.name) {
@@ -126,7 +135,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val text = if (showLoginForm.value) "Sign Up" else "Login"
-                Text(text = if(showLoginForm.value) "New User? " else "Have Account: ")
+                Text(text = if (showLoginForm.value) "New User? " else "Have Account: ")
                 Text(
                     text = text,
                     modifier = Modifier
@@ -140,17 +149,17 @@ fun LoginScreen(
                 )
             }
         }
-
     }
 }
 
-@SuppressLint("RememberReturnType")
+@SuppressLint("RememberReturnType", "UnrememberedMutableState")
 @OptIn(ExperimentalComposeUiApi::class)
 @Preview
 @Composable
 fun UserForm(
     loading: Boolean = false,
     isCreateAccount: Boolean = false,
+    onWrongEmailPassword: Boolean = false,
     onDone: (String, String) -> Unit = { email, pass -> },
 ) {
 
@@ -162,11 +171,14 @@ fun UserForm(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val valid = remember(email.value, password.value) {
-        email.value.trim().isNotEmpty() && password.value.trim().isNotEmpty()
+//        email.value.trim().isNotEmpty() && password.value.trim().isNotEmpty()
+        checkEmailAndPassword(email.value,password.value)
     }
 
+    val onWrongEmailPassword = mutableStateOf(false)
+
     val modifier = Modifier
-        .height(250.dp)
+        .height(300.dp)
         .background(color = MaterialTheme.colorScheme.background)
         .verticalScroll(rememberScrollState())                                       // for scrollable
 
@@ -177,7 +189,8 @@ fun UserForm(
     ) {
 
         AnimatedVisibility(
-            visible = isCreateAccount
+            visible = false
+//            visible = isCreateAccount
         ) {
             Text(
                 text = stringResource(id = R.string.create_Account),
@@ -186,6 +199,18 @@ fun UserForm(
                 maxLines = 3,
                 style = TextStyle(
                     fontSize = 14.sp
+                )
+            )
+        }
+
+        if (!valid) {
+            Text(
+                text = stringResource(id = R.string.email_password),
+                modifier = Modifier.padding(horizontal = 30.dp),
+                color = MaterialTheme.colorScheme.error,
+                maxLines = 4,
+                style = TextStyle(
+                    fontSize = 12.sp
                 )
             )
         }

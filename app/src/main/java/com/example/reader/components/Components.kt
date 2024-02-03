@@ -195,14 +195,16 @@ fun ReaderAppBar(
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(text = title)
+                Text(text = title, fontSize = if (showProfile) 20.sp else 18.sp)
             }
         },
         actions = {
             if (showProfile) {
                 IconButton(onClick = {
                     FirebaseAuth.getInstance().signOut().run {
-                        navController.navigate(ReaderScreens.LoginScreen.name)
+                        navController.navigate(ReaderScreens.LoginScreen.name){
+                            popUpTo(0)
+                        }
                     }
                 }) {
                     Icon(imageVector = Icons.Filled.Logout, contentDescription = "logout icon")
@@ -261,7 +263,6 @@ fun BookRating(score: Double = 4.5) {
                 imageVector = Icons.Filled.StarBorder, contentDescription = "Star icon",
                 modifier = Modifier.padding(1.dp)
             )
-
             Text(
                 text = score.toString(),
                 style = TextStyle(
@@ -312,7 +313,6 @@ fun ListCard(
     book: MBook = MBook("asaf", "Running", "me and you", "hello world"),
     onPressDetails: (String) -> Unit = {}
 ) {
-
     val context = LocalContext.current
     val resources = context.resources
 
@@ -376,7 +376,6 @@ fun ListCard(
                         // Show an error message
                     }
                 )
-
 
                 Column(
                     modifier = Modifier
