@@ -200,7 +200,7 @@ fun ShowSimpleForm(book: MBook, navController: NavController) {
                 Text(
                     text = "Started on : ${formatDate(book.startReading!!)}",
                     fontSize = 12.sp
-                )  // Todo: format data
+                )
             }
         }
         Spacer(modifier = Modifier.width(7.dp))
@@ -228,7 +228,7 @@ fun ShowSimpleForm(book: MBook, navController: NavController) {
                 Text(
                     text = "Finished on: ${formatDate(book.finishedReading!!)}",
                     fontSize = 12.sp
-                )   // Todo: format data
+                )
             }
         }
     }
