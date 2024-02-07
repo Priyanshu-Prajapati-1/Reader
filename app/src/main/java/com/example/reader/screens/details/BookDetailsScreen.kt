@@ -95,7 +95,6 @@ fun BookDetailsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    var ifSaveBook = mutableStateOf(true)
 
                     val bookInfo = produceState<Resource<Item>>(initialValue = Resource.Loading()) {
                         value = viewModel.getBookInfo(bookId = bookId)
@@ -191,7 +190,7 @@ fun BookDetailsScreen(
                                 ) {}
 
                                 val contentDescription = HtmlCompat.fromHtml(
-                                    bookData!!.description,
+                                    bookData.description,
                                     HtmlCompat.FROM_HTML_MODE_LEGACY
                                 ).toString()
                                 Text(

@@ -1,5 +1,6 @@
 package com.example.reader.components
 
+import android.annotation.SuppressLint
 import android.view.MotionEvent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -414,7 +415,7 @@ fun ListCard(
                                 .padding(bottom = 1.dp)
                         )
 
-                        book.rating?.let { BookRating(score = it.toDouble()) }
+                        book.rating?.let { BookRating(score = it) }
                     }
                 }
                 Text(
@@ -451,7 +452,10 @@ fun ListCard(
 }
 
 @Composable
-fun IsLoading(isCircular: Boolean = false, modifier: Modifier = Modifier) {
+fun IsLoading(
+    isCircular: Boolean = false,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+) {
     if (isCircular) {
         Box(
             modifier = modifier
