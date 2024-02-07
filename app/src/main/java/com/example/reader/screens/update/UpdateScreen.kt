@@ -286,7 +286,7 @@ fun ShowSimpleForm(book: MBook, navController: NavController) {
                     .addOnCompleteListener { task ->
                         ifUpdating.value = false
                         Log.d("task result", "result :$task")
-                        navController.navigate(ReaderScreens.HomeScreen.name){
+                        navController.navigate(ReaderScreens.HomeScreen.name) {
                             popUpTo(0)
                         }
                     }
@@ -294,10 +294,10 @@ fun ShowSimpleForm(book: MBook, navController: NavController) {
                         ifUpdating.value = false
                         Log.d("error in update", "Error : $it")
                     }
-            }else{
+            } else {
                 ifUpdating.value = true
                 Thread.sleep(200)
-                navController.navigate(ReaderScreens.HomeScreen.name){
+                navController.navigate(ReaderScreens.HomeScreen.name) {
                     popUpTo(0)
                 }
             }

@@ -57,7 +57,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -512,19 +511,20 @@ fun RatingBar(
                     .width(size)
                     .height(size)
                     .pointerInteropFilter {
-                        when(it.action){
-                            MotionEvent.ACTION_DOWN->{
+                        when (it.action) {
+                            MotionEvent.ACTION_DOWN -> {
                                 selected = true
                                 onPressRating(i)
                                 ratingState = i
                             }
-                            MotionEvent.ACTION_UP->{
+
+                            MotionEvent.ACTION_UP -> {
                                 selected = false
                             }
                         }
                         true
                     },
-                tint = if(i <= ratingState) Color(0xFFFFD700) else Color(0xFFA2ADB1)
+                tint = if (i <= ratingState) Color(0xFFFFD700) else Color(0xFFA2ADB1)
             )
         }
     }

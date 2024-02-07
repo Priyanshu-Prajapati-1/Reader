@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -21,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -156,7 +154,9 @@ fun HomeContent(
         TitleSection(modifier = Modifier.padding(start = 10.dp), label = "Reading List...")
 
         if (viewModel.data.value.loading == true) {
-            IsLoading(isCircular = true, modifier = Modifier.height(300.dp).width(550.dp))
+            IsLoading(isCircular = true, modifier = Modifier
+                .height(300.dp)
+                .width(550.dp))
         } else {
             BookListArea(listOfBooks = listOfBooks, navController = navController)
         }
@@ -168,7 +168,7 @@ fun BookListArea(listOfBooks: List<MBook>, navController: NavController) {
 
     HorizontalScrollableComponent(listOfBooks) {
         Log.d("book", it)
-        navController.navigate(ReaderScreens.UpdateScreen.name+"/$it")
+        navController.navigate(ReaderScreens.UpdateScreen.name + "/$it")
     }
 }
 

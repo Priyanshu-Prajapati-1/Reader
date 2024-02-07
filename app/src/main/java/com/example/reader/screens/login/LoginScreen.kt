@@ -2,7 +2,6 @@ package com.example.reader.screens.login
 
 import android.annotation.SuppressLint
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -202,8 +201,9 @@ fun UserForm(
             }
         )
 
-        if(viewModel.onWrongEmailPassword.value){
-            Text(text = "Invalid email and password",
+        if (viewModel.onWrongEmailPassword.value) {
+            Text(
+                text = "Invalid email and password",
                 style = TextStyle(
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 12.sp
@@ -253,12 +253,11 @@ fun SubmitButton(
 
         ) {
         if (isCircularLoading.value) {
-            if(viewModel.onWrongEmailPassword.value){
+            if (viewModel.onWrongEmailPassword.value) {
                 isCircularLoading.value = false
             }
             CircularProgressIndicator(modifier = Modifier.size(25.dp))
-        }
-        else {
+        } else {
             Text(
                 text = textId,
                 modifier = Modifier.padding(5.dp),
