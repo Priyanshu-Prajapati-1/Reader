@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -49,7 +50,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -70,9 +70,6 @@ fun LoginScreen(
         mutableStateOf(true)
     }
 
-
-
-
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -92,33 +89,22 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
             )
-            if (showLoginForm.value) {
-                UserForm(
-                    loading = false,
-                    isCreateAccount = false,
-                    onWrongEmailPassword = false
-                ) { email, password ->
-                    Log.d("FBR", "signInWithEmailAndPassword: ye $email and $password")
 
-//                    if(checkEmailAndPassword(email, password)){
-//                        onWrongEmailPassword.value = false
-//                    }else{
-//                        onWrongEmailPassword.value = true
-//                    }
+            UserForm(
+                loading = false,
+                isCreateAccount = false,
+                viewModel = viewModel
+            ) { email, password ->
+                Log.d("FBR", "signInWithEmailAndPassword: ye $email and $password")
 
+                if (showLoginForm.value) {
                     // TODO: FireBase Login
                     viewModel.signInWithEmailAndPassword(email, password) {
                         navController.navigate(ReaderScreens.HomeScreen.name) {
                             popUpTo(0)
                         }
                     }
-                }
-            } else {
-                UserForm(
-                    loading = false,
-                    isCreateAccount = true,
-                )
-                { email, password ->
+                } else {
                     // TODO: create FireBase account
                     viewModel.createUserWithEmailAndPassword(email, password) {
                         navController.navigate(ReaderScreens.HomeScreen.name) {
@@ -154,12 +140,11 @@ fun LoginScreen(
 
 @SuppressLint("RememberReturnType", "UnrememberedMutableState")
 @OptIn(ExperimentalComposeUiApi::class)
-@Preview
 @Composable
 fun UserForm(
     loading: Boolean = false,
     isCreateAccount: Boolean = false,
-    onWrongEmailPassword: Boolean = false,
+    viewModel: LoginScreenViewModel,
     onDone: (String, String) -> Unit = { email, pass -> },
 ) {
 
@@ -172,10 +157,8 @@ fun UserForm(
 
     val valid = remember(email.value, password.value) {
 //        email.value.trim().isNotEmpty() && password.value.trim().isNotEmpty()
-        checkEmailAndPassword(email.value,password.value)
+        checkEmailAndPassword(email.value, password.value)
     }
-
-    val onWrongEmailPassword = mutableStateOf(false)
 
     val modifier = Modifier
         .height(300.dp)
@@ -187,21 +170,6 @@ fun UserForm(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        AnimatedVisibility(
-            visible = false
-//            visible = isCreateAccount
-        ) {
-            Text(
-                text = stringResource(id = R.string.create_Account),
-                modifier = Modifier.padding(horizontal = 30.dp),
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 3,
-                style = TextStyle(
-                    fontSize = 14.sp
-                )
-            )
-        }
 
         if (!valid) {
             Text(
@@ -234,10 +202,20 @@ fun UserForm(
             }
         )
 
+        if(viewModel.onWrongEmailPassword.value){
+            Text(text = "Invalid email and password",
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp
+                )
+            )
+        }
+
         SubmitButton(
             textId = if (isCreateAccount) "Create Account" else "Login",
             loading = loading,
             validInputs = valid,
+            viewModel = viewModel
         ) {
             onDone(email.value.trim(), password.value.trim())
             keyboardController?.hide()
@@ -250,6 +228,7 @@ fun SubmitButton(
     textId: String,
     loading: Boolean,
     validInputs: Boolean,
+    viewModel: LoginScreenViewModel,
     onClick: () -> Unit
 ) {
     val isCircularLoading = rememberSaveable {
@@ -273,7 +252,12 @@ fun SubmitButton(
         shape = CircleShape,
 
         ) {
-        if (isCircularLoading.value) CircularProgressIndicator(modifier = Modifier.size(25.dp))
+        if (isCircularLoading.value) {
+            if(viewModel.onWrongEmailPassword.value){
+                isCircularLoading.value = false
+            }
+            CircularProgressIndicator(modifier = Modifier.size(25.dp))
+        }
         else {
             Text(
                 text = textId,
@@ -342,6 +326,9 @@ fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
     IconButton(
         onClick = { passwordVisibility.value = !visible },
         modifier = Modifier.padding(end = 5.dp),
+        colors = IconButtonDefaults.iconButtonColors(
+            contentColor = MaterialTheme.colorScheme.onBackground
+        )
     ) {
         Icons.Default.Close
     }

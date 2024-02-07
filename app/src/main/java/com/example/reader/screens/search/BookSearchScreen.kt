@@ -50,6 +50,7 @@ import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.example.reader.R
 import com.example.reader.components.InputField
+import com.example.reader.components.IsLoading
 import com.example.reader.components.ReaderAppBar
 import com.example.reader.model.BookModel.Item
 import com.example.reader.navigation.ReaderScreens
@@ -111,17 +112,7 @@ fun BookList(navController: NavController, viewModel: BookSearchViewModel = hilt
     val listOfBooks = viewModel.list
 
     if (viewModel.isLoading) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 30.dp, vertical = 50.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = "Loading...")
-            Spacer(modifier = Modifier.height(5.dp))
-            LinearProgressIndicator()
-        }
+       IsLoading(isCircular = false)
     } else {
         LazyColumn(   /// this gives error
             modifier = Modifier.fillMaxSize(),
@@ -132,25 +123,6 @@ fun BookList(navController: NavController, viewModel: BookSearchViewModel = hilt
             }
         }
     }
-
-
-//    if (viewModel.listOfBooks.value.loading == true) {
-//        Log.d("Books", "books: ${viewModel.listOfBooks.value.data.toString()}")
-//
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(200.dp),
-//            horizontalArrangement = Arrangement.Center,
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            CircularProgressIndicator()
-//        }
-//
-//    } else {
-//        Log.d("Book", "books: ${viewModel.listOfBooks.value.data.toString()}")
-//    }
-
 }
 
 @Composable
@@ -192,17 +164,7 @@ fun BookRow(book: Item, navController: NavController) {
                     .height(100.dp)
                     .clip(RoundedCornerShape(5.dp)),
                 loading = {
-                    Box(
-                        modifier = Modifier
-                            .height(100.dp)
-                            .width(90.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(35.dp)
-                        )
-                    }
+                  IsLoading(isCircular = true)
                 },
                 onError = {}
             )

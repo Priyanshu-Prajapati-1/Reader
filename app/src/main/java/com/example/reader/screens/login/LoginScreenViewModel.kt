@@ -22,12 +22,13 @@ class LoginScreenViewModel : ViewModel() {
     private val _loading = MutableLiveData(false)
     val loading: LiveData<Boolean> = _loading
 
-    val onError = mutableStateOf(false)
+
+    val onWrongEmailPassword = mutableStateOf(false)
 
     // run away from main thread.
     fun signInWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
         viewModelScope.launch {
-
+            onWrongEmailPassword.value = false
             try {
                 auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener() { task ->
@@ -36,9 +37,13 @@ class LoginScreenViewModel : ViewModel() {
                             // TODO: ("take them home Screen")
                             home()
                         } else {
-                            onError.value = true
+                            onWrongEmailPassword.value = true
                             Log.w("onError", "signInWithEmail:failure", task.exception)
                         }
+                    }
+                    .addOnFailureListener {
+                        onWrongEmailPassword.value = true
+                        Log.d("Failure", "on Failure : $it")
                     }
 
             } catch (ex: Exception) {
@@ -49,6 +54,7 @@ class LoginScreenViewModel : ViewModel() {
     // run away from main thread.
     fun createUserWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
         viewModelScope.launch {
+            onWrongEmailPassword.value = false
 
             if (_loading.value == false) {
                 _loading.value = true
@@ -63,6 +69,10 @@ class LoginScreenViewModel : ViewModel() {
                             Log.d("FB r", "createWithEmailAndPassword: ${task.result}")
                         }
                         _loading.value = false
+                    }
+                    .addOnFailureListener {
+                        onWrongEmailPassword.value = true
+                        Log.d("Failure", "on Failure : $it")
                     }
             }
         }

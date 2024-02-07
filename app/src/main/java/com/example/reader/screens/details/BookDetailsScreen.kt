@@ -1,6 +1,7 @@
 package com.example.reader.screens.details
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,6 +29,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,11 +42,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.example.reader.components.ReaderAppBar
+import com.example.reader.components.RoundedButton
 import com.example.reader.data.Resource
 import com.example.reader.model.BookModel.Item
+import com.example.reader.model.MBook
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 fun BookDetailsScreen(
     navController: NavController,
@@ -89,16 +95,21 @@ fun BookDetailsScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Spacer(modifier = Modifier.height(80.dp))
+                    var ifSaveBook = mutableStateOf(true)
 
                     val bookInfo = produceState<Resource<Item>>(initialValue = Resource.Loading()) {
                         value = viewModel.getBookInfo(bookId = bookId)
                     }.value
 
-                    val imageUrl = bookInfo.data?.volumeInfo?.imageLinks?.smallThumbnail
+                    val bookData = bookInfo.data?.volumeInfo
+
+                    val imageUrl = bookData?.imageLinks?.smallThumbnail
+                    val googleBookId = bookInfo.data?.id
 
 
-                    if (bookInfo.data == null) {
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    if (bookData == null) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -140,17 +151,17 @@ fun BookDetailsScreen(
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            Text(text = bookInfo.data.volumeInfo.title)
-                            //Text(text = bookInfo.data.volumeInfo.subtitle)
+                            Text(text = bookData.title)
+                            //Text(text = bookData.subtitle)
 
-                            Text(text = bookInfo.data.volumeInfo.authors.toString())
-                            Text(text = bookInfo.data.volumeInfo.pageCount.toString())
+                            Text(text = bookData.authors.toString())
+                            Text(text = bookData.pageCount.toString())
 
-                            for (category in bookInfo.data.volumeInfo.categories) {
+                            for (category in bookData.categories) {
                                 Text(text = category)
                             }
-                            Text(text = bookInfo.data.volumeInfo.publisher)
-                            Text(text = bookInfo.data.volumeInfo.publishedDate)
+                            Text(text = bookData.publisher)
+                            Text(text = bookData.publishedDate)
 
 
                             Column(
@@ -160,7 +171,7 @@ fun BookDetailsScreen(
                                     .border(
                                         border = BorderStroke(
                                             1.dp,
-                                            MaterialTheme.colorScheme.errorContainer
+                                            MaterialTheme.colorScheme.onTertiaryContainer
                                         ), shape = RoundedCornerShape(3.dp)
                                     ),
                                 horizontalAlignment = Alignment.Start
@@ -169,7 +180,7 @@ fun BookDetailsScreen(
                                 Text(
                                     text = "Description",
                                     modifier = Modifier
-                                        .padding(horizontal = 4.dp),
+                                        .padding(horizontal = 6.dp),
                                     fontSize = 20.sp
                                 )
                                 Row(
@@ -180,22 +191,68 @@ fun BookDetailsScreen(
                                 ) {}
 
                                 val contentDescription = HtmlCompat.fromHtml(
-                                    bookInfo.data.volumeInfo!!.description,
+                                    bookData!!.description,
                                     HtmlCompat.FROM_HTML_MODE_LEGACY
                                 ).toString()
                                 Text(
                                     text = contentDescription,
                                     modifier = Modifier
-                                        .padding(horizontal = 4.dp, vertical = 5.dp)
+                                        .padding(horizontal = 6.dp, vertical = 5.dp)
                                 )
-
                             }
-
-
+                        }
+                        Row(
+                            modifier = Modifier
+                                .padding(6.dp),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            RoundedButton(label = "Save", ifLoadingProcess = true) {
+                                val book = MBook(
+                                    title = bookData.title,
+                                    author = bookData.authors.toString(),
+                                    description = bookData.description,
+                                    categories = bookData.categories.toString(),
+                                    notes = "",
+                                    photoUrl = bookData.imageLinks.thumbnail,
+                                    publishedDate = bookData.publishedDate,
+                                    rating = 0.0,
+                                    pageCount = bookData.pageCount.toString(),
+                                    googleBookId = googleBookId,
+                                    userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                                )
+                                saveToFirebase(book, navController)
+                            }
+                            Spacer(modifier = Modifier.width(55.dp))
+                            RoundedButton(label = "Cancel") {
+                                navController.popBackStack()
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+fun saveToFirebase(book: MBook, navController: NavController) {
+
+    val db = FirebaseFirestore.getInstance()
+    val dbCollection = db.collection("books")
+
+    if (book.toString().isNotEmpty()) {
+        dbCollection.add(book)
+            .addOnSuccessListener { documentReference ->
+                val docId = documentReference.id
+                dbCollection.document(docId)
+                    .update(hashMapOf("id" to docId) as Map<String, Any>)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            navController.popBackStack()
+                        }
+                    }
+                    .addOnFailureListener {
+                        Log.d("error", "Error updating : $it")
+                    }
+            }
     }
 }

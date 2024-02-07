@@ -1,5 +1,9 @@
 package com.example.reader.components
 
+import android.view.MotionEvent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -31,6 +35,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,12 +45,20 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -129,13 +142,13 @@ fun InputField(
             .padding(bottom = 10.dp, start = 20.dp, end = 20.dp)
             .fillMaxWidth(),
         enabled = enabled,
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
         keyboardActions = onAction,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.tertiary,
             unfocusedBorderColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+        ),
     )
 }
 
@@ -202,12 +215,12 @@ fun ReaderAppBar(
             if (showProfile) {
                 IconButton(onClick = {
                     FirebaseAuth.getInstance().signOut().run {
-                        navController.navigate(ReaderScreens.LoginScreen.name){
+                        navController.navigate(ReaderScreens.LoginScreen.name) {
                             popUpTo(0)
                         }
                     }
                 }) {
-                    Icon(imageVector = Icons.Filled.Logout, contentDescription = "logout icon")
+                    Icon(imageVector = Icons.Default.Logout, contentDescription = "logout icon")
                 }
             }
         },
@@ -280,9 +293,15 @@ fun BookRating(score: Double = 4.5) {
 @Composable
 fun RoundedButton(
     label: String = "Reading",
-    radius: Int = 29,
+    radius: Int = 30,
+    ifLoadingProcess: Boolean = false,
     onPress: () -> Unit = {}
 ) {
+
+    val ifBookSave = rememberSaveable {
+        mutableStateOf(false)
+    }
+
     Surface(
         modifier = Modifier
             .clip(RoundedCornerShape(bottomEndPercent = radius, topStartPercent = radius)),
@@ -290,19 +309,29 @@ fun RoundedButton(
     ) {
         Column(
             modifier = Modifier
-                .width(90.dp)
-                .heightIn(40.dp)
-                .clickable { onPress.invoke() },
+                .width(80.dp)
+                .heightIn(35.dp)
+                .clickable {
+                    ifBookSave.value = !ifBookSave.value
+                    onPress.invoke()
+                },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = label,
-                style = TextStyle(
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp
+            if (ifBookSave.value && ifLoadingProcess) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(25.dp)
                 )
-            )
+            } else {
+                Text(
+                    text = label,
+                    style = TextStyle(
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 16.sp
+                    )
+                )
+            }
         }
     }
 }
@@ -321,102 +350,182 @@ fun ListCard(
 
     val spacing = 10.dp
 
-    Card(
-        shape = RoundedCornerShape(25.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.background
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 5.dp,
-            pressedElevation = 7.dp
-        ),
+    Box(
         modifier = Modifier
             .padding(15.dp)
             .height(240.dp)
             .width(180.dp)
-            .clickable {
-                onPressDetails.invoke(book.title.toString())
-            }
     ) {
-        Column(
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.background
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 5.dp,
+                pressedElevation = 7.dp
+            ),
             modifier = Modifier
-                .width(screenWidth.dp - (spacing * 2)),
-            horizontalAlignment = Alignment.Start
+                .height(240.dp)
+                .width(180.dp)
+                .clickable {
+                    onPressDetails.invoke(book.googleBookId.toString())
+                }
         ) {
-            Row(
+            Column(
                 modifier = Modifier
-                    .align(alignment = Alignment.Start)
-                    .fillMaxWidth()
-                    .padding(end = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .width(screenWidth.dp - (spacing * 2)),
+                horizontalAlignment = Alignment.Start
             ) {
-
-                SubcomposeAsyncImage(
-                    model = "http://books.google.com/books/content?id=ZthJlG4o-2wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
-                    contentDescription = "Book image",
+                Row(
                     modifier = Modifier
-                        .height(140.dp)
-                        .width(100.dp)
-                        .padding(0.dp)
-                        .clip(RoundedCornerShape(bottomEnd = 20.dp)),
-                    contentScale = ContentScale.Crop,
-                    loading = {
-                        Box(
-                            modifier = Modifier.size(35.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .size(35.dp)
-                            )
-                        }
-                        // Show a loading indicator
-                    },
-                    onError = {
-                        // Show an error message
-                    }
-                )
-
-                Column(
-                    modifier = Modifier
-                        .padding(top = 15.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .align(alignment = Alignment.Start)
+                        .fillMaxWidth()
+                        .padding(end = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite icon",
+
+                    SubcomposeAsyncImage(
+                        model = if (book.photoUrl == null) R.drawable.image else book.photoUrl,
+                        contentDescription = "Book image",
                         modifier = Modifier
-                            .padding(bottom = 1.dp)
+                            .height(140.dp)
+                            .width(100.dp)
+                            .clip(RoundedCornerShape(bottomEnd = 15.dp)),
+                        contentScale = ContentScale.Crop,
+                        loading = {
+                            IsLoading(isCircular = true, modifier = Modifier.size(35.dp))
+                            // Show a loading indicator
+                        },
+                        onError = {
+                            // Show an error message
+                        }
                     )
 
-                    BookRating(score = 3.5)
-                }
-            }
-            Text(
-                text = book.title.toString(),
-                modifier = Modifier
-                    .padding(horizontal = 7.dp, vertical = 3.dp),
-                fontWeight = FontWeight.Bold,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            ) // ...
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 15.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FavoriteBorder,
+                            contentDescription = "Favorite icon",
+                            modifier = Modifier
+                                .padding(bottom = 1.dp)
+                        )
 
-            Text(
-                text = book.author.toString(),
-                modifier = Modifier
-                    .padding(horizontal = 7.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.bodyMedium
-            )
+                        book.rating?.let { BookRating(score = it.toDouble()) }
+                    }
+                }
+                Text(
+                    text = book.title.toString(),
+                    modifier = Modifier
+                        .padding(horizontal = 7.dp, vertical = 3.dp),
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium
+                ) // ...
+
+                Text(
+                    text = book.author.toString(),
+                    modifier = Modifier
+                        .padding(horizontal = 7.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
         }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .align(Alignment.BottomEnd),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.Bottom
         ) {
-            RoundedButton(label = "Reading", radius = 60)
+            RoundedButton(label = "Reading", radius = 20)
+        }
+    }
+}
+
+@Composable
+fun IsLoading(isCircular: Boolean = false, modifier: Modifier = Modifier) {
+    if (isCircular) {
+        Box(
+            modifier = modifier
+                .height(100.dp)
+                .width(90.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(35.dp)
+            )
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 30.dp, vertical = 50.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Loading...")
+            Spacer(modifier = Modifier.height(5.dp))
+            LinearProgressIndicator()
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+fun RatingBar(
+    modifier: Modifier = Modifier,
+    rating: Int,
+    onPressRating: (Int) -> Unit
+) {
+    var ratingState by remember {
+        mutableStateOf(rating)
+    }
+    var selected by remember {
+        mutableStateOf(false)
+    }
+
+    val size by animateDpAsState(
+        targetValue = if (selected) 44.dp else 34.dp, spring(Spring.DampingRatioMediumBouncy),
+        label = ""
+    )
+
+    Row(
+        modifier = Modifier.width(280.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        for (i in 1..5) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_star_24),
+                contentDescription = "star",
+                modifier = modifier
+                    .width(size)
+                    .height(size)
+                    .pointerInteropFilter {
+                        when(it.action){
+                            MotionEvent.ACTION_DOWN->{
+                                selected = true
+                                onPressRating(i)
+                                ratingState = i
+                            }
+                            MotionEvent.ACTION_UP->{
+                                selected = false
+                            }
+                        }
+                        true
+                    },
+                tint = if(i <= ratingState) Color(0xFFFFD700) else Color(0xFFA2ADB1)
+            )
         }
     }
 }
