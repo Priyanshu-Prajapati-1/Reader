@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -31,9 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -77,7 +82,6 @@ fun HomeScreen(
         ) {
             HomeContent(navController = navController, viewModel = viewModel)
         }
-
     }
 }
 
@@ -150,13 +154,16 @@ fun HomeContent(
                 Divider()
             }
         }
-        ReadingRightNowArea(books = listOf(), navController = navController)
+
+        ReadingRightNowArea(listOfBooks = listOfBooks, navController = navController)
         TitleSection(modifier = Modifier.padding(start = 10.dp), label = "Reading List...")
 
         if (viewModel.data.value.loading == true) {
-            IsLoading(isCircular = true, modifier = Modifier
-                .height(300.dp)
-                .width(550.dp))
+            IsLoading(
+                isCircular = true, modifier = Modifier
+                    .height(300.dp)
+                    .width(550.dp)
+            )
         } else {
             BookListArea(listOfBooks = listOfBooks, navController = navController)
         }
@@ -166,14 +173,36 @@ fun HomeContent(
 @Composable
 fun BookListArea(listOfBooks: List<MBook>, navController: NavController) {
 
-    HorizontalScrollableComponent(listOfBooks) {
+    val addedBook = listOfBooks.filter { mBook ->
+        mBook.startReading == null && mBook.finishedReading == null
+    }
+
+    HorizontalScrollableComponent(addedBook) {
         Log.d("book", it)
         navController.navigate(ReaderScreens.UpdateScreen.name + "/$it")
     }
 }
 
 @Composable
-fun HorizontalScrollableComponent(listOfBooks: List<MBook>, onCardPressed: (String) -> Unit) {
+fun ReadingRightNowArea(listOfBooks: List<MBook>, navController: NavController) {
+
+    // filter books by reading now
+    val readingNowList = listOfBooks.filter { mBook ->
+        mBook.startReading != null && mBook.finishedReading == null
+    }
+
+    HorizontalScrollableComponent(readingNowList) {
+        Log.d("book", it)
+        navController.navigate(ReaderScreens.UpdateScreen.name + "/$it")
+    }
+}
+
+@Composable
+fun HorizontalScrollableComponent(
+    listOfBooks: List<MBook>,
+    viewModel: HomeScreenViewModel = hiltViewModel(),
+    onCardPressed: (String) -> Unit
+) {
 
     val scrollState = rememberScrollState()
 
@@ -183,17 +212,43 @@ fun HorizontalScrollableComponent(listOfBooks: List<MBook>, onCardPressed: (Stri
             .heightIn(280.dp)
             .horizontalScroll(scrollState)
     ) {
-        for (book in listOfBooks) {
-            ListCard(book = book) {
-                onCardPressed(it)
+
+        if (viewModel.data.value.loading == true) {
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .padding( 80.dp)
+            )
+
+        } else {
+            if (listOfBooks.isEmpty()) {
+                val configuration = LocalConfiguration.current
+
+                val screenHeight = configuration.screenHeightDp.dp / 3
+                val screenWidth = configuration.screenWidthDp.dp
+                Column(
+                    modifier = Modifier
+                        .padding(0.dp)
+                        .height(screenHeight)
+                        .width(screenWidth),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No Books found. Add Book",
+                        style = TextStyle(
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    )
+                }
+            } else {
+                for (book in listOfBooks) {
+                    ListCard(book = book) {
+                        onCardPressed(it)
+                    }
+                }
             }
         }
     }
 }
-
-@Composable
-fun ReadingRightNowArea(books: List<MBook>, navController: NavController) {
-    ListCard()
-}
-
-

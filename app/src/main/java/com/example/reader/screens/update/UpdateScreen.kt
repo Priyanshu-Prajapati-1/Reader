@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,16 +18,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -38,7 +43,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -46,14 +53,17 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
+import com.example.reader.R
 import com.example.reader.components.InputField
 import com.example.reader.components.IsLoading
 import com.example.reader.components.RatingBar
 import com.example.reader.components.ReaderAppBar
 import com.example.reader.components.RoundedButton
+import com.example.reader.components.ShowToast
 import com.example.reader.data.DataOrException
 import com.example.reader.model.MBook
 import com.example.reader.navigation.ReaderScreens
@@ -302,14 +312,115 @@ fun ShowSimpleForm(book: MBook, navController: NavController) {
                 }
             }
         }
+
+        val openDialogBox = remember {
+            mutableStateOf(false)
+        }
+        val ifDeteteInProcess = remember {
+            mutableStateOf(false)
+        }
+
+        val title: String =
+            stringResource(id = R.string.sure) + "\n" + stringResource(id = R.string.action)
+
+        val context = LocalContext.current
+
+        if (openDialogBox.value) {
+            ShowAlertDialogBox(message = title, openDialogBox, ifDeteteInProcess) {
+                FirebaseFirestore.getInstance().collection("books")
+                    .document(book.id!!)
+                    .delete()
+                    .addOnCompleteListener {
+                        openDialogBox.value = false
+                        navController.navigate(ReaderScreens.HomeScreen.name) {
+                            popUpTo(0)
+                        }
+                    }
+                    .addOnFailureListener {
+                        openDialogBox.value = false
+                        ShowToast(message = "Unable to delete\n Try Again", context = context)
+                    }
+            }
+        }
+
         RoundedButton(
             label = "Delete",
             radius = 35
         ) {
-
+            openDialogBox.value = true
         }
     }
     Spacer(modifier = Modifier.height(100.dp))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ShowAlertDialogBox(
+    message: String,
+    openDialog: MutableState<Boolean>,
+    ifDeleteInProcess: MutableState<Boolean>,
+    onPressedYes: () -> Unit
+) {
+    if (openDialog.value) {
+        AlertDialog(
+            backgroundColor = MaterialTheme.colorScheme.background,
+            shape = RoundedCornerShape(15.dp),
+            onDismissRequest = {
+                openDialog.value = false
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            ),
+            text = {
+                Text(
+                    text = "Delete Book",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text(
+                    text = message,
+                    fontSize = 15.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            },
+            buttons = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceAround
+                ) {
+                    if (ifDeleteInProcess.value) {
+                        Box(
+                            modifier = Modifier.height(5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LinearProgressIndicator()
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.padding(6.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        TextButton(onClick = {
+                            ifDeleteInProcess.value = true
+                            onPressedYes.invoke()
+                        }) {
+                            Text(text = "Yes")
+                        }
+                        Spacer(modifier = Modifier.width(130.dp))
+                        TextButton(onClick = {
+                            openDialog.value = false
+                        }) {
+                            Text(text = "No")
+                        }
+                    }
+                }
+            })
+    }
 }
 
 @SuppressLint("RememberReturnType")

@@ -1,6 +1,7 @@
 package com.example.reader.screens.search
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -97,6 +98,12 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(5.dp))
 
                 BookList(navController = navController)
+            }
+        }
+
+        BackHandler {
+            navController.navigate(ReaderScreens.HomeScreen.name){
+                popUpTo(0)
             }
         }
     }

@@ -20,36 +20,4 @@ import coil.compose.rememberAsyncImagePainter
 @Composable
 fun StatsScreen(navController: NavController){
 
-    Column {
-
-
-        Text(text = "Stats Screen")
-        SubcomposeAsyncImage(
-            model = "https://wallpapers.com/images/hd/wallpaper-chain-iron-metal-links-blur-1wkvbpapxb6wafjx.webp",
-            contentDescription = "Book image",
-            modifier = Modifier
-                .height(140.dp)
-                .width(90.dp)
-                .padding(4.dp),
-            contentScale = ContentScale.Crop,
-            loading = {
-                // Show a loading indicator
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-            },
-            onError = {
-                // Show an error message
-            }
-        )
-
-        Image(
-            painter = rememberAsyncImagePainter(model = "https://wallpapers.com/images/hd/wallpaper-chain-iron-metal-links-blur-1wkvbpapxb6wafjx.webp"),
-            contentDescription = "book image",
-            modifier = Modifier
-                .height(140.dp)
-                .width(90.dp)
-                .padding(4.dp)
-        )
-    }
 }

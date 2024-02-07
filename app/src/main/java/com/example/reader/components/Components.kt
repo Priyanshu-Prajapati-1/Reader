@@ -1,7 +1,9 @@
 package com.example.reader.components
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -309,7 +311,7 @@ fun RoundedButton(
     ) {
         Column(
             modifier = Modifier
-                .width(80.dp)
+                .width(85.dp)
                 .heightIn(35.dp)
                 .clickable {
                     ifBookSave.value = !ifBookSave.value
@@ -328,7 +330,7 @@ fun RoundedButton(
                     text = label,
                     style = TextStyle(
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp
+                        fontSize = 15.sp
                     )
                 )
             }
@@ -438,6 +440,10 @@ fun ListCard(
 
         }
 
+        val isStartedReading = remember {
+            mutableStateOf(false)
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -446,7 +452,9 @@ fun ListCard(
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.Bottom
         ) {
-            RoundedButton(label = "Reading", radius = 20)
+            isStartedReading.value = book.startReading != null
+
+            RoundedButton(label = if(isStartedReading.value) "Reading" else "Not Started", radius = 20)
         }
     }
 }
@@ -532,4 +540,8 @@ fun RatingBar(
             )
         }
     }
+}
+
+fun ShowToast(message : String, context: Context){
+    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }
