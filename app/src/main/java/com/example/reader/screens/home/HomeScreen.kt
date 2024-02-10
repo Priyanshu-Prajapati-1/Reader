@@ -5,10 +5,12 @@ import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -155,17 +157,36 @@ fun HomeContent(
             }
         }
 
-        ReadingRightNowArea(listOfBooks = listOfBooks, navController = navController)
-        TitleSection(modifier = Modifier.padding(start = 10.dp), label = "Reading List...")
-
-        if (viewModel.data.value.loading == true) {
+        if(viewModel.data.value.loading==true) {
             IsLoading(
                 isCircular = true, modifier = Modifier
                     .height(300.dp)
                     .width(550.dp)
             )
-        } else {
-            BookListArea(listOfBooks = listOfBooks, navController = navController)
+        }else{
+            if (!listOfBooks.isNullOrEmpty()) {
+                ReadingRightNowArea(listOfBooks = listOfBooks, navController = navController)
+                TitleSection(modifier = Modifier.padding(start = 10.dp), label = "Reading List...")
+
+                if (viewModel.data.value.loading == true) {
+                    IsLoading(
+                        isCircular = true, modifier = Modifier
+                            .height(300.dp)
+                            .width(550.dp)
+                    )
+                } else {
+                    BookListArea(listOfBooks = listOfBooks, navController = navController)
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .width(400.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "empty")
+                }
+            }
         }
     }
 }
@@ -216,7 +237,7 @@ fun HorizontalScrollableComponent(
         if (viewModel.data.value.loading == true) {
             LinearProgressIndicator(
                 modifier = Modifier
-                    .padding( 80.dp)
+                    .padding(80.dp)
             )
 
         } else {

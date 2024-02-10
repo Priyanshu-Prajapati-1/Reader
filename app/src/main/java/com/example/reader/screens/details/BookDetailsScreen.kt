@@ -2,6 +2,7 @@ package com.example.reader.screens.details
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -29,12 +31,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.text.HtmlCompat
@@ -43,11 +51,14 @@ import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
 import com.example.reader.components.ReaderAppBar
 import com.example.reader.components.RoundedButton
+import com.example.reader.components.ShowToast
 import com.example.reader.data.Resource
 import com.example.reader.model.BookModel.Item
 import com.example.reader.model.MBook
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
@@ -78,6 +89,20 @@ fun BookDetailsScreen(
             }
         }
     ) {
+
+        BackHandler {
+            navController.popBackStack()
+        }
+
+        val context = LocalContext.current
+        val ifBookExists = remember {
+            mutableStateOf(false)
+        }
+
+        if (ifBookExists.value) {
+            ShowToast("Book already exists", context)
+        }
+
         Surface(
             modifier = Modifier
                 .padding(it)
@@ -150,18 +175,87 @@ fun BookDetailsScreen(
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            Text(text = bookData.title)
-                            //Text(text = bookData.subtitle)
+                            Column(
+                                modifier = Modifier
+                                    .padding(horizontal = 10.dp)
+                            ) {
+                                Text(
+                                    text = bookData.title,
+                                    style = TextStyle(
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.W400
 
-                            Text(text = bookData.authors.toString())
-                            Text(text = bookData.pageCount.toString())
+                                    )
+                                )
+                                Text(
+                                    text = "Author: " + bookData.authors.toString(),
+                                    style = TextStyle(
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.W400
 
-                            for (category in bookData.categories) {
-                                Text(text = category)
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(5.dp))
+                                bookData.subtitle?.let { subtitle ->
+                                    Text(
+                                        text = subtitle,
+                                        style = TextStyle(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.W400
+
+                                        )
+                                    )
+                                }
+
                             }
-                            Text(text = bookData.publisher)
-                            Text(text = bookData.publishedDate)
 
+                            Column(
+                                modifier = Modifier
+                                    .padding(20.dp)
+                            ) {
+                                for (category in bookData.categories) {
+                                    Text(
+                                        text = ": $category",
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.W400,
+                                            fontStyle = FontStyle.Italic
+                                        )
+                                    )
+
+                                }
+                            }
+
+                            Card {
+                                Column(
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Publisher: " + bookData.publisher,
+                                        style = TextStyle(
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.W400,
+                                        )
+                                    )
+                                    Text(
+                                        text = "Published Date: " + bookData.publishedDate,
+                                        style = TextStyle(
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.W400,
+                                        )
+                                    )
+                                    Text(
+                                        text = "Pages: " + bookData.pageCount.toString(),
+                                        style = TextStyle(
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.W400,
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(15.dp))
 
                             Column(
                                 modifier = Modifier
@@ -219,7 +313,11 @@ fun BookDetailsScreen(
                                     googleBookId = googleBookId,
                                     userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
                                 )
-                                saveToFirebase(book, navController)
+                                saveToFirebase(
+                                    book = book,
+                                    navController = navController,
+                                    ifBookExist = ifBookExists
+                                )
                             }
                             Spacer(modifier = Modifier.width(55.dp))
                             RoundedButton(label = "Cancel") {
@@ -233,25 +331,39 @@ fun BookDetailsScreen(
     }
 }
 
-fun saveToFirebase(book: MBook, navController: NavController) {
+fun saveToFirebase(book: MBook, navController: NavController, ifBookExist: MutableState<Boolean>) {
 
     val db = FirebaseFirestore.getInstance()
     val dbCollection = db.collection("books")
 
-    if (book.toString().isNotEmpty()) {
-        dbCollection.add(book)
-            .addOnSuccessListener { documentReference ->
-                val docId = documentReference.id
-                dbCollection.document(docId)
-                    .update(hashMapOf("id" to docId) as Map<String, Any>)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            navController.popBackStack()
+    // check if book already available
+    val bookCollection = Firebase.firestore
+    val booksCollectionRef = bookCollection.collection("books")
+    val query = booksCollectionRef.whereEqualTo("google_book_id", book.googleBookId).whereEqualTo("user_id", book.userId)
+
+    query.get()
+        .addOnSuccessListener { querySnapshot ->
+            if (!querySnapshot.isEmpty) {
+                ifBookExist.value = true
+                navController.popBackStack()
+            } else {
+                ifBookExist.value = false
+                if (book.toString().isNotEmpty() && querySnapshot.isEmpty) {
+                    dbCollection.add(book)
+                        .addOnSuccessListener { documentReference ->
+                            val docId = documentReference.id
+                            dbCollection.document(docId)
+                                .update(hashMapOf("id" to docId) as Map<String, Any>)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        navController.popBackStack()
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    Log.d("error", "Error updating : $it")
+                                }
                         }
-                    }
-                    .addOnFailureListener {
-                        Log.d("error", "Error updating : $it")
-                    }
+                }
             }
-    }
+        }
 }
