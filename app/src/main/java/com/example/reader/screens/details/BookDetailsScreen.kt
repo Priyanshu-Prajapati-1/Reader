@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,11 +31,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +58,9 @@ import com.example.reader.components.ShowToast
 import com.example.reader.data.Resource
 import com.example.reader.model.BookModel.Item
 import com.example.reader.model.MBook
+import com.example.reader.navigation.ReaderScreens
+import com.example.reader.screens.home.HomeScreenViewModel
+import com.example.reader.screens.update.ShowAlertDialogBox
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -66,7 +72,8 @@ import com.google.firebase.firestore.firestore
 fun BookDetailsScreen(
     navController: NavController,
     bookId: String,
-    viewModel: DetailsViewModel = hiltViewModel()
+    viewModel: DetailsViewModel = hiltViewModel(),
+    homeViewModel: HomeScreenViewModel = hiltViewModel()
 ) {
 
     Scaffold(
@@ -99,9 +106,115 @@ fun BookDetailsScreen(
             mutableStateOf(false)
         }
 
-        if (ifBookExists.value) {
-            ShowToast("Book already exists", context)
+        val bookInfo = produceState<Resource<Item>>(initialValue = Resource.Loading()) {
+            value = viewModel.getBookInfo(bookId = bookId)
+        }.value
+
+        val bookData = bookInfo.data?.volumeInfo
+        val imageUrl = bookData?.imageLinks?.smallThumbnail
+        val googleBookId = bookInfo.data?.id
+
+        val book = MBook(
+            title = bookData?.title,
+            author = bookData?.authors.toString(),
+            description = bookData?.description,
+            categories = bookData?.categories.toString(),
+            notes = "",
+            photoUrl = bookData?.imageLinks?.thumbnail,
+            publishedDate = bookData?.publishedDate,
+            rating = 0.0,
+            pageCount = bookData?.pageCount.toString(),
+            googleBookId = googleBookId,
+            userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        )
+
+        val ifComplete = remember {
+            mutableStateOf(false)
         }
+        val ifStartReading = remember {
+            mutableStateOf(false)
+        }
+        val ifBookInReadingList = remember {
+            mutableStateOf(false)
+        }
+        val ifLoadingProcess = remember {
+            mutableStateOf(true)
+        }
+
+        if(ifBookExists.value){
+            ShowToast("book already exists", context = context)
+        }
+
+//        if ( ifStartReading.value || ifBookInReadingList.value) {
+//            if(ifBookExists.value){
+//                ifLoadingProcess.value = false
+//                AlertDialog(
+//                    title = {
+//                        Text(text = "Already in reading list")
+//                    },
+//                    onDismissRequest = {
+//                        ifBookExists.value = false
+//                    },
+//                    confirmButton = {
+//                        TextButton(
+//                            onClick = {
+//                                ifBookExists.value = false
+//                                navController.popBackStack()
+//                            }
+//                        ) {
+//                            Text("Ok")
+//                        }
+//                    }
+//                )
+//            }
+//        }else if(ifComplete.value){
+//            AlertDialog(
+//                title = {
+//                    Text(text = "You already read this!")
+//                },
+//                text = {
+//                    Text(text = "If you want to save again press: Confirm\n else press: Dismiss")
+//                },
+//                onDismissRequest = {
+//                },
+//                confirmButton = {
+//                    TextButton(
+//                        onClick = {
+//                            FirebaseFirestore.getInstance().collection("books")
+//                                .document(book.id!!)
+//                                .delete()
+//                                .addOnCompleteListener {
+//                                    saveToFirebase(
+//                                        book = book,
+//                                        navController = navController,
+//                                        ifBookExist = ifBookExists
+//                                    )
+//                                    navController.navigate(ReaderScreens.HomeScreen.name) {
+//                                        popUpTo(0)
+//                                    }
+//                                }
+//                                .addOnFailureListener {
+//                                    ShowToast(message = "Unable to delete\n Try Again", context = context)
+//                                }
+//
+//                        }
+//                    ) {
+//                        Text("Confirm")
+//                    }
+//                },
+//                dismissButton = {
+//                    TextButton(
+//                        onClick = {
+//                            ifComplete.value =false
+//                            ifStartReading.value =false
+//                            ifBookInReadingList.value =false
+//                        }
+//                    ) {
+//                        Text("Dismiss")
+//                    }
+//                }
+//            )
+//        }
 
         Surface(
             modifier = Modifier
@@ -121,14 +234,9 @@ fun BookDetailsScreen(
                 ) {
 
 
-                    val bookInfo = produceState<Resource<Item>>(initialValue = Resource.Loading()) {
-                        value = viewModel.getBookInfo(bookId = bookId)
-                    }.value
 
-                    val bookData = bookInfo.data?.volumeInfo
 
-                    val imageUrl = bookData?.imageLinks?.smallThumbnail
-                    val googleBookId = bookInfo.data?.id
+
 
 
                     Spacer(modifier = Modifier.height(40.dp))
@@ -299,25 +407,47 @@ fun BookDetailsScreen(
                                 .padding(6.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            RoundedButton(label = "Save", ifLoadingProcess = true) {
-                                val book = MBook(
-                                    title = bookData.title,
-                                    author = bookData.authors.toString(),
-                                    description = bookData.description,
-                                    categories = bookData.categories.toString(),
-                                    notes = "",
-                                    photoUrl = bookData.imageLinks.thumbnail,
-                                    publishedDate = bookData.publishedDate,
-                                    rating = 0.0,
-                                    pageCount = bookData.pageCount.toString(),
-                                    googleBookId = googleBookId,
-                                    userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                                )
+                            RoundedButton(
+                                label = "Save",
+                                ifLoadingProcess = ifLoadingProcess.value
+                            ) {
                                 saveToFirebase(
-                                    book = book,
-                                    navController = navController,
-                                    ifBookExist = ifBookExists
-                                )
+                                        book = book,
+                                        navController = navController,
+                                        ifBookExist = ifBookExists
+                                    )
+
+//                                var listOfBooks = emptyList<MBook>()
+//                                val currentUser = FirebaseAuth.getInstance().currentUser
+//
+//                                if (!homeViewModel.data.value.data.isNullOrEmpty()) {
+//                                    listOfBooks =
+//                                        homeViewModel.data.value.data!!.toList().filter { mBook ->
+//                                            mBook.userId == currentUser?.uid.toString()
+//                                        }
+//                                }
+//
+//                                val bookById: MBook? = listOfBooks.find {
+//                                    it.googleBookId == googleBookId
+//                                }
+//
+//                                if(bookById?.googleBookId == null && bookById?.userId == null) {
+//                                    saveToFirebase(
+//                                        book = book,
+//                                        navController = navController,
+//                                        ifBookExist = ifBookExists
+//                                    )
+//                                }else{
+//                                    if (bookById.finishedReading != null) {
+//                                        ifComplete.value = true
+//                                    } else {
+//                                        if (bookById.startReading != null) {
+//                                            ifStartReading.value = true
+//                                        } else {
+//                                            ifBookInReadingList.value = true
+//                                        }
+//                                    }
+//                                }
                             }
                             Spacer(modifier = Modifier.width(55.dp))
                             RoundedButton(label = "Cancel") {
@@ -333,19 +463,22 @@ fun BookDetailsScreen(
 
 fun saveToFirebase(book: MBook, navController: NavController, ifBookExist: MutableState<Boolean>) {
 
+
     val db = FirebaseFirestore.getInstance()
     val dbCollection = db.collection("books")
 
     // check if book already available
     val bookCollection = Firebase.firestore
     val booksCollectionRef = bookCollection.collection("books")
-    val query = booksCollectionRef.whereEqualTo("google_book_id", book.googleBookId).whereEqualTo("user_id", book.userId)
+    val query = booksCollectionRef
+        .whereEqualTo("google_book_id", book.googleBookId)
+        .whereEqualTo("user_id", book.userId)
 
     query.get()
         .addOnSuccessListener { querySnapshot ->
             if (!querySnapshot.isEmpty) {
                 ifBookExist.value = true
-                navController.popBackStack()
+                 navController.popBackStack()
             } else {
                 ifBookExist.value = false
                 if (book.toString().isNotEmpty() && querySnapshot.isEmpty) {
@@ -366,4 +499,9 @@ fun saveToFirebase(book: MBook, navController: NavController, ifBookExist: Mutab
                 }
             }
         }
+}
+
+@Composable
+fun ShowDialog() {
+
 }
