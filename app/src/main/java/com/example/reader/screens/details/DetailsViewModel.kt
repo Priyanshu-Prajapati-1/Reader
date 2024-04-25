@@ -8,7 +8,6 @@ import com.example.reader.model.BookModel.Item
 import com.example.reader.model.MBook
 import com.example.reader.repository.BookRepository
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.firestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.tasks.await
@@ -18,7 +17,7 @@ import javax.inject.Inject
 class DetailsViewModel @Inject constructor(private val bookRepository: BookRepository) :
     ViewModel() {
 
-    var ifLoading: Boolean = false
+    private var ifLoading: Boolean = false
 
     suspend fun getBookInfo(bookId: String): Resource<Item> {
         return bookRepository.getBookInfo(bookId)
@@ -89,49 +88,4 @@ class DetailsViewModel @Inject constructor(private val bookRepository: BookRepos
 
         return null
     }
-
-
-//    coroutineScope.launch {
-//        val mBook: MBook? = googleBookId?.let { it1 ->
-//            viewModel.getMBookByGoogleBookIdAndUserId(
-//                it1,
-//                FirebaseAuth.getInstance().currentUser?.uid.toString()
-//            )
-//        }
-//
-//        if(mBook?.finishedReading != null){
-//            ifComplete.value = true
-//            Log.d("finishedReading", mBook?.startReading.toString())
-//            Log.d("finishedReading", mBook?.finishedReading.toString())
-//
-//
-//            saveToFirebase(
-//                book = book,
-//                navController = navController,
-//                ifBookExist = ifBookExists
-//            )
-//        }else{
-//            if(mBook?.startReading != null){
-//                ifStartReading.value = true
-//                Log.d("startReading", mBook?.startReading.toString())
-//                Log.d("startReading", mBook?.finishedReading.toString())
-//
-//
-//            }else{
-//                ifBookInReadingList.value = true
-//                Log.d("mbook", mBook?.startReading.toString())
-//                Log.d("mbook", mBook?.finishedReading.toString())
-//            }
-//        }
-//
-//        if(mBook?.userId == null && mBook?.id == null){
-//            saveToFirebase(
-//                book = book,
-//                navController = navController,
-//                ifBookExist = ifBookExists
-//            )
-//        }
-//    }
-
-
 }

@@ -39,14 +39,14 @@ fun SplashScreen(navController: NavHostController) {
         scale.animateTo(
             targetValue = 0.9f,
             animationSpec = tween(
-                durationMillis = 1300,
+                durationMillis = 1100,
                 easing = {
                     OvershootInterpolator(7f)
                         .getInterpolation(it)
                 }
             )
         )
-        delay(1300)
+        delay(900)
 
         if (FirebaseAuth.getInstance().currentUser?.email.isNullOrEmpty()) {
             navController.navigate(ReaderScreens.LoginScreen.name) {
@@ -57,10 +57,6 @@ fun SplashScreen(navController: NavHostController) {
                 popUpTo(0)
             }
         }
-
-//        navController.navigate(ReaderScreens.LoginScreen.name) {
-//            popUpTo(0)
-//        }
     })
 
     Column(

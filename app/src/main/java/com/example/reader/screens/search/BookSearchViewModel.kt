@@ -21,7 +21,6 @@ class BookSearchViewModel @Inject constructor(private val repository: BookReposi
     var list: List<Item> by mutableStateOf(listOf())
 
     var isLoading: Boolean by mutableStateOf(true)
-    var onError: Boolean by mutableStateOf(false)
 
     init {
         loadBooks()

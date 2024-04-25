@@ -1,9 +1,11 @@
 package com.example.reader.model
 
+import androidx.compose.runtime.Immutable
 import  com.google.firebase.Timestamp
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.PropertyName
 
+@Immutable
 data class MBook(
 
     @Exclude

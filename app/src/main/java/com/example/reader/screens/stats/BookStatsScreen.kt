@@ -19,10 +19,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -66,9 +66,9 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = h
             ) {
                 ReaderAppBar(
                     title = "Book stats",
-                    icon = Icons.Default.ArrowBack,
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
                     showProfile = false,
-                    navController = navController
+                    navController = navController,
                 ) {
                     navController.navigate(ReaderScreens.HomeScreen.name) {
                         popUpTo(0)
@@ -149,7 +149,7 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = h
                                 color = MaterialTheme.colorScheme.inverseSurface
                             )
                         )
-                        Divider(
+                        HorizontalDivider(
                             color = MaterialTheme.colorScheme.outline
                         )
 
@@ -171,8 +171,6 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = h
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         )
-
-
                     }
 
                 }
@@ -220,7 +218,7 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = h
             }
         }
         BackHandler {
-            navController.navigate(ReaderScreens.HomeScreen.name){
+            navController.navigate(ReaderScreens.HomeScreen.name) {
                 popUpTo(0)
             }
         }
@@ -232,7 +230,7 @@ fun BookRow(book: MBook, navController: NavController) {
 
     val imageUrl = book.photoUrl?.ifEmpty {
         // "http://books.google.com/books/content?id=ZthJlG4o-2wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
-        R.drawable.image
+        R.drawable.book_image
     }
 
     Card(
@@ -240,7 +238,7 @@ fun BookRow(book: MBook, navController: NavController) {
             .fillMaxWidth()
             .padding(6.dp)
             .clickable {
-                navController.navigate(ReaderScreens.DetailsScreen.name + "/${book.id}")
+                navController.navigate(ReaderScreens.DetailsScreen.name + "/${book.googleBookId}")
             },
         shape = RoundedCornerShape(6.dp),
         colors = CardDefaults.cardColors(

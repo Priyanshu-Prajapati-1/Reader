@@ -1,5 +1,8 @@
 package com.example.reader.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class MUser(
     val id: String?,
     val userId: String,

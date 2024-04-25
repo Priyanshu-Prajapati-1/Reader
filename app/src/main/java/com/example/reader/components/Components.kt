@@ -8,7 +8,6 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,16 +16,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Logout
@@ -164,9 +167,10 @@ fun TitleSection(modifier: Modifier = Modifier, label: String = "Title Section")
             Text(
                 text = label,
                 style = TextStyle(
-                    fontSize = 19.sp,
+                    fontSize = 17.sp,
                     fontStyle = FontStyle.Normal,
-                    textAlign = TextAlign.Left
+                    textAlign = TextAlign.Left,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 )
             )
         }
@@ -177,9 +181,11 @@ fun TitleSection(modifier: Modifier = Modifier, label: String = "Title Section")
 @Composable
 fun ReaderAppBar(
     title: String,
+    userName: String? = null,
     icon: ImageVector? = null,
     showProfile: Boolean = true,
     navController: NavController,
+    onProfileClicked: () -> Unit = {},
     onBackArrowClicked: () -> Unit = {}
 ) {
     TopAppBar(
@@ -190,19 +196,21 @@ fun ReaderAppBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (showProfile) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_background),
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Icon",
                         modifier = Modifier
-                            .size(30.dp)
-                            .clip(shape = RoundedCornerShape(10.dp))
+                            .clip(CircleShape)
+                            .clickable { onProfileClicked() }
+                            .size(35.dp),
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                     )
                 }
 
                 if (icon != null) {
                     Icon(
                         imageVector = icon, contentDescription = "icon",
-                        tint = MaterialTheme.colorScheme.onBackground,
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                         modifier = Modifier.clickable {
                             onBackArrowClicked.invoke()
                         }
@@ -210,7 +218,26 @@ fun ReaderAppBar(
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(text = title, fontSize = if (showProfile) 20.sp else 18.sp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = title, fontSize = if (showProfile) 18.sp else 16.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+                        lineHeight = 19.sp
+                    )
+                    (if (showProfile) 10.sp else null)?.let {
+                        Text(
+                            text = userName.toString(),
+                            fontSize = it,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                            lineHeight = 11.sp
+                        )
+                    }
+                }
             }
         },
         actions = {
@@ -222,7 +249,10 @@ fun ReaderAppBar(
                         }
                     }
                 }) {
-                    Icon(imageVector = Icons.Default.Logout, contentDescription = "logout icon")
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = "logout icon",
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
+                    )
                 }
             }
         },
@@ -235,7 +265,10 @@ fun ReaderAppBar(
             .height(50.dp)
             .clip(shape = RoundedCornerShape(15.dp))
             .border(
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onBackground),
+                border = BorderStroke(
+                    1.dp,
+                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.50f)
+                ),
                 shape = RoundedCornerShape(15.dp)
             )
     )
@@ -329,7 +362,7 @@ fun RoundedButton(
                 Text(
                     text = label,
                     style = TextStyle(
-                        color = MaterialTheme.colorScheme.onBackground,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f),
                         fontSize = 15.sp
                     )
                 )
@@ -349,8 +382,6 @@ fun ListCard(
 
     val displayMetrics = resources.displayMetrics
     val screenWidth = displayMetrics.widthPixels / displayMetrics.density
-
-    val spacing = 10.dp
 
     Box(
         modifier = Modifier
@@ -376,7 +407,7 @@ fun ListCard(
         ) {
             Column(
                 modifier = Modifier
-                    .width(screenWidth.dp - (spacing * 2)),
+                    .width(screenWidth.dp - (10.dp * 2)),
                 horizontalAlignment = Alignment.Start
             ) {
                 Row(
@@ -388,7 +419,7 @@ fun ListCard(
                 ) {
 
                     SubcomposeAsyncImage(
-                        model = if (book.photoUrl == null) R.drawable.image else book.photoUrl,
+                        model = if (book.photoUrl == null) R.drawable.book_image else book.photoUrl,
                         contentDescription = "Book image",
                         modifier = Modifier
                             .height(140.dp)
@@ -399,9 +430,7 @@ fun ListCard(
                             IsLoading(isCircular = true, modifier = Modifier.size(35.dp))
                             // Show a loading indicator
                         },
-                        onError = {
-                            // Show an error message
-                        }
+                        onError = {}
                     )
 
                     Column(
@@ -427,14 +456,16 @@ fun ListCard(
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodyMedium
-                ) // ...
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
+                )
 
                 Text(
                     text = book.author.toString(),
                     modifier = Modifier
                         .padding(horizontal = 7.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
                 )
             }
 
@@ -443,7 +474,6 @@ fun ListCard(
         val isStartedReading = remember {
             mutableStateOf(false)
         }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -454,7 +484,10 @@ fun ListCard(
         ) {
             isStartedReading.value = book.startReading != null
 
-            RoundedButton(label = if(isStartedReading.value) "Reading" else "Not Started", radius = 20)
+            RoundedButton(
+                label = if (isStartedReading.value) "Reading" else "Not Started",
+                radius = 20
+            )
         }
     }
 }
@@ -542,6 +575,6 @@ fun RatingBar(
     }
 }
 
-fun ShowToast(message : String, context: Context){
+fun showToast(message: String, context: Context) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }

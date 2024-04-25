@@ -1,5 +1,9 @@
 package com.example.reader.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -17,13 +21,43 @@ import com.example.reader.screens.search.SearchScreen
 import com.example.reader.screens.stats.StatsScreen
 import com.example.reader.screens.update.UpdateScreen
 
+const val time = 500
+
 @Composable
 fun ReaderNavigation() {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = ReaderScreens.SplashScreen.name
+        startDestination = ReaderScreens.SplashScreen.name,
+        enterTransition = {
+            fadeIn(animationSpec = tween(time)) +
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Left,
+                        tween(time)
+                    )
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(time)) +
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Down,
+                        tween(time)
+                    )
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(time)) +
+                    slideIntoContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Up,
+                        tween(time)
+                    )
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(time)) +
+                    slideOutOfContainer(
+                        AnimatedContentTransitionScope.SlideDirection.Right,
+                        tween(time)
+                    )
+        },
     ) {
 
         composable(ReaderScreens.SplashScreen.name) {
@@ -44,11 +78,12 @@ fun ReaderNavigation() {
             StatsScreen(navController = navController, viewModel = homeViewModel)
         }
 
-        composable(ReaderScreens.UpdateScreen.name + "/{bookItemId}",
-            arguments = listOf(navArgument("bookItemId"){
+        composable(
+            ReaderScreens.UpdateScreen.name + "/{bookItemId}",
+            arguments = listOf(navArgument("bookItemId") {
                 type = NavType.StringType
             })
-        ) {backStackEntry ->
+        ) { backStackEntry ->
             backStackEntry.arguments?.getString("bookItemId").let {
                 UpdateScreen(navController = navController, bookItemId = it.toString())
             }

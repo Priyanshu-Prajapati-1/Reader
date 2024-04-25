@@ -1,5 +1,8 @@
 package com.example.reader.model.BookModel
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class Item(
     val accessInfo: AccessInfo,
     val etag: String,

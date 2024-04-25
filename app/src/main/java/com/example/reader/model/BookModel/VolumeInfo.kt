@@ -1,5 +1,8 @@
 package com.example.reader.model.BookModel
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class VolumeInfo(
     val allowAnonLogging: Boolean,
     val authors: List<String>,

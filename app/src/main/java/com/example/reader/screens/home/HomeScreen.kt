@@ -2,34 +2,27 @@ package com.example.reader.screens.home
 
 import android.annotation.SuppressLint
 import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +31,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,6 +44,8 @@ import com.example.reader.components.TitleSection
 import com.example.reader.model.MBook
 import com.example.reader.navigation.ReaderScreens
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -63,11 +57,17 @@ fun HomeScreen(
     Scaffold(topBar = {
         Surface(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(8.dp)
                 .shadow(elevation = 10.dp)
                 .clip(shape = RoundedCornerShape(15.dp)),
         ) {
-            ReaderAppBar(title = "Reader", navController = navController)
+            ReaderAppBar(title = "Reader",
+                navController = navController,
+                userName = viewModel.currentUserName.toString(),
+                onProfileClicked = {
+                    navController.navigate(ReaderScreens.StatsScreen.name)
+                }
+            )
         }
     }, floatingActionButton = {
         FABContent {
@@ -93,12 +93,8 @@ fun HomeContent(
     viewModel: HomeScreenViewModel
 ) {
 
-//    val listOfBooks = listOf(
-//        MBook(id = "kvbvkjn", title = "hello again", author = "alex", notes = "babu"),
-//        MBook(id = "kvbvkjn", title = "hello", author = "alex", notes = "babu"),
-//        MBook(id = "kvbvkjn", title = "hello again", author = "alex", notes = "babu"),
-//        MBook(id = "kvbvkjn", title = "hello again", author = "alex", notes = "babu"),
-//    )
+    val scope = rememberCoroutineScope()
+
 
     var listOfBooks = emptyList<MBook>()
     val currentUser = FirebaseAuth.getInstance().currentUser
@@ -109,11 +105,8 @@ fun HomeContent(
         }
     }
 
-    val email = FirebaseAuth.getInstance().currentUser?.email
-    val currentUserName = if (!email.isNullOrEmpty()) {
-        FirebaseAuth.getInstance().currentUser?.email?.substringBefore("@")
-    } else {
-        "N/A"
+    scope.launch {
+        delay(450)
     }
 
     Column(
@@ -130,41 +123,20 @@ fun HomeContent(
                 .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TitleSection(label = "Your Reading \n" + "activity right now")
-            Spacer(modifier = Modifier.fillMaxWidth(0.8f))
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.AccountCircle, contentDescription = "profile",
-                    modifier = Modifier
-                        .clickable {
-                            navController.navigate(ReaderScreens.StatsScreen.name)
-                        }
-                        .size(40.dp),
-                    tint = MaterialTheme.colorScheme.outline
-                )
-                Text(
-                    text = currentUserName.toString(),
-                    modifier = Modifier.padding(1.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1,
-                    overflow = TextOverflow.Clip
-                )
-                Divider()
-            }
+            TitleSection(label = "Your Reading activity right now")
         }
 
-        if(viewModel.data.value.loading==true) {
+        val config = LocalConfiguration.current
+        val width = config.screenWidthDp.dp
+
+        if (viewModel.data.value.loading == true) {
             IsLoading(
                 isCircular = true, modifier = Modifier
                     .height(300.dp)
-                    .width(550.dp)
+                    .width(width)
             )
-        }else{
-            if (!listOfBooks.isNullOrEmpty()) {
+        } else {
+            if (listOfBooks.isNotEmpty()) {
                 ReadingRightNowArea(listOfBooks = listOfBooks, navController = navController)
                 TitleSection(modifier = Modifier.padding(start = 10.dp), label = "Reading List...")
 
@@ -172,7 +144,7 @@ fun HomeContent(
                     IsLoading(
                         isCircular = true, modifier = Modifier
                             .height(300.dp)
-                            .width(550.dp)
+                            .width(width)
                     )
                 } else {
                     BookListArea(listOfBooks = listOfBooks, navController = navController)

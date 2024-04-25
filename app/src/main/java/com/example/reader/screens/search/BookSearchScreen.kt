@@ -2,10 +2,12 @@ package com.example.reader.screens.search
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,7 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -69,12 +70,13 @@ fun SearchScreen(
             ) {
                 ReaderAppBar(
                     title = "Search",
-                    icon = Icons.Default.ArrowBack,
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
                     showProfile = false,
-                    navController = navController
+                    navController = navController,
                 ) {
-//                    navController.popBackStack()
-                    navController.navigate(ReaderScreens.HomeScreen.name)
+                    navController.navigate(ReaderScreens.HomeScreen.name) {
+                        popUpTo(0)
+                    }
                 }
             }
         }
@@ -100,15 +102,15 @@ fun SearchScreen(
                 BookList(navController = navController)
             }
         }
-
         BackHandler {
-            navController.navigate(ReaderScreens.HomeScreen.name){
+            navController.navigate(ReaderScreens.HomeScreen.name) {
                 popUpTo(0)
             }
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookList(navController: NavController, viewModel: BookSearchViewModel = hiltViewModel()) {
 
@@ -119,27 +121,31 @@ fun BookList(navController: NavController, viewModel: BookSearchViewModel = hilt
     } else {
         LazyColumn(   /// this gives error
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 15.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(items = listOfBooks) { book: Item ->
-                BookRow(book = book, navController = navController)
+                BookRow(
+                    book = book, navController = navController, modifier = Modifier
+                        .animateItemPlacement(animationSpec = tween(1000, easing = LinearEasing))
+                )
             }
         }
     }
 }
 
 @Composable
-fun BookRow(book: Item, navController: NavController) {
+fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modifier) {
 
     val imageUrl = book.volumeInfo.imageLinks.smallThumbnail.ifEmpty {
         // "http://books.google.com/books/content?id=ZthJlG4o-2wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
-        R.drawable.image
+        R.drawable.book_image
     }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(6.dp)
+            .padding(horizontal = 12.dp)
             .clickable {
                 navController.navigate(ReaderScreens.DetailsScreen.name + "/${book.id}")
             },
@@ -185,7 +191,8 @@ fun BookRow(book: Item, navController: NavController) {
                     )
                 )
                 Text(
-                    text = "Author: ${book.volumeInfo.authors}", overflow = TextOverflow.Ellipsis,
+                    text = "Author: ${book.volumeInfo.authors}",
+                    overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -211,7 +218,6 @@ fun BookRow(book: Item, navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchTextField(
     modifier: Modifier = Modifier,
@@ -220,7 +226,7 @@ fun SearchTextField(
     hint: String = "Search",
     onSearch: (String) -> Unit = {}
 ) {
-    Column() {
+    Column{
         val searchQueryState = rememberSaveable {
             mutableStateOf("")
         }
