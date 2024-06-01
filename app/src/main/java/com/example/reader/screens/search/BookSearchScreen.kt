@@ -2,9 +2,6 @@ package com.example.reader.screens.search
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,8 +11,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,8 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +36,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -49,9 +50,11 @@ import coil.compose.SubcomposeAsyncImage
 import com.example.reader.R
 import com.example.reader.components.InputField
 import com.example.reader.components.IsLoading
-import com.example.reader.components.ReaderAppBar
-import com.example.reader.model.BookModel.Item
+import com.example.reader.model.bookModel.Item
 import com.example.reader.navigation.ReaderScreens
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -60,48 +63,80 @@ fun SearchScreen(
     navController: NavController,
     viewModel: BookSearchViewModel = hiltViewModel()
 ) {
-    Scaffold(
-        topBar = {
-            Surface(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .shadow(elevation = 10.dp)
-                    .clip(shape = RoundedCornerShape(15.dp)),
+    /* Scaffold(
+         topBar = {
+             Surface(
+                 modifier = Modifier
+                     .padding(10.dp)
+                     .shadow(elevation = 10.dp)
+                     .clip(shape = RoundedCornerShape(15.dp)),
+             ) {
+                 ReaderAppBar(
+                     title = "Search",
+                     icon = Icons.AutoMirrored.Filled.ArrowBack,
+                     showProfile = false,
+                     navController = navController,
+                 ) {
+                     navController.navigate(ReaderScreens.HomeScreen.name) {
+                         popUpTo(0)
+                     }
+                 }
+             }
+         }
+
+     ) { innerPadding ->
+         BackHandler {
+             navController.navigate(ReaderScreens.HomeScreen.name) {
+                 popUpTo(0)
+             }
+         }
+     }*/
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+        // .verticalScroll(rememberScrollState())   // not use this , it gave you many errors related to recomposition
+    ) {
+        Column {
+
+            Row(
+                modifier = Modifier.wrapContentSize(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                ReaderAppBar(
-                    title = "Search",
-                    icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    showProfile = false,
-                    navController = navController,
-                ) {
-                    navController.navigate(ReaderScreens.HomeScreen.name) {
-                        popUpTo(0)
+
+                IconButton(
+                    modifier = Modifier.padding(start = 10.dp),
+                    onClick = {
+                        navController.navigate(ReaderScreens.HomeScreen.name) {
+                            popUpTo(0)
+                        }
+                    }) {
+                    Icon(
+                        modifier = Modifier.size(28.dp),
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+
+                SearchTextField(
+                    modifier = Modifier
+                        .padding(start = 5.dp, end = 10.dp, top = 0.dp, bottom = 5.dp),
+                    viewModel = viewModel
+                ) { searchQuery ->
+                    if(searchQuery.isNotEmpty()){
+                        viewModel.searchBooks(query = searchQuery)
+                    }else{
+                        viewModel.searchBooks(query = "fun")
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(5.dp))
+
+            BookList(navController = navController)
         }
 
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .padding(innerPadding)
-            // .verticalScroll(rememberScrollState())   // not use this , it gave you many errors related to recomposition
-        ) {
-            Column {
-                SearchTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    viewModel = viewModel
-                ) { searchQuery ->
-                    viewModel.searchBooks(query = searchQuery)
-                }
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-                BookList(navController = navController)
-            }
-        }
         BackHandler {
             navController.navigate(ReaderScreens.HomeScreen.name) {
                 popUpTo(0)
@@ -110,7 +145,6 @@ fun SearchScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookList(navController: NavController, viewModel: BookSearchViewModel = hiltViewModel()) {
 
@@ -120,14 +154,15 @@ fun BookList(navController: NavController, viewModel: BookSearchViewModel = hilt
         IsLoading(isCircular = false)
     } else {
         LazyColumn(   /// this gives error
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(items = listOfBooks) { book: Item ->
                 BookRow(
                     book = book, navController = navController, modifier = Modifier
-                        .animateItemPlacement(animationSpec = tween(1000, easing = LinearEasing))
                 )
             }
         }
@@ -137,10 +172,12 @@ fun BookList(navController: NavController, viewModel: BookSearchViewModel = hilt
 @Composable
 fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modifier) {
 
-    val imageUrl = book.volumeInfo.imageLinks.smallThumbnail.ifEmpty {
-        // "http://books.google.com/books/content?id=ZthJlG4o-2wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
-        R.drawable.book_image
-    }
+    val photoUrl =
+        if (book.volumeInfo.imageLinks?.smallThumbnail != null) book.volumeInfo.imageLinks.smallThumbnail else R.drawable.book_image
+    val title = book.volumeInfo.title ?: ""
+    val author = book.volumeInfo.authors ?: ""
+    val publishedDate = book.volumeInfo.publishedDate ?: ""
+    val categories = book.volumeInfo.categories ?: ""
 
     Card(
         modifier = modifier
@@ -167,7 +204,7 @@ fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modif
         ) {
 
             SubcomposeAsyncImage(
-                model = imageUrl,
+                model = photoUrl,
                 contentDescription = "Book image",
                 modifier = Modifier
                     .height(100.dp)
@@ -183,7 +220,7 @@ fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modif
                 modifier = Modifier.padding(vertical = 7.dp, horizontal = 5.dp)
             ) {
                 Text(
-                    text = book.volumeInfo.title, overflow = TextOverflow.Clip,
+                    text = title, overflow = TextOverflow.Clip,
                     style = TextStyle(
                         fontSize = 15.sp,
                         fontStyle = FontStyle.Normal,
@@ -191,7 +228,7 @@ fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modif
                     )
                 )
                 Text(
-                    text = "Author: ${book.volumeInfo.authors}",
+                    text = "Author: $author",
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
                         fontSize = 16.sp,
@@ -199,7 +236,7 @@ fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modif
                     )
                 )
                 Text(
-                    text = "Published date: ${book.volumeInfo.publishedDate}",
+                    text = "Published date: $publishedDate",
                     overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
                         fontSize = 14.sp,
@@ -208,7 +245,7 @@ fun BookRow(book: Item, navController: NavController, modifier: Modifier = Modif
                     textDecoration = TextDecoration.Underline
                 )
                 Text(
-                    text = "${book.volumeInfo.categories}", overflow = TextOverflow.Ellipsis,
+                    text = categories.toString(), overflow = TextOverflow.Ellipsis,
                     style = TextStyle(
                         fontSize = 14.sp
                     )
@@ -226,7 +263,7 @@ fun SearchTextField(
     hint: String = "Search",
     onSearch: (String) -> Unit = {}
 ) {
-    Column{
+    Column {
         val searchQueryState = rememberSaveable {
             mutableStateOf("")
         }
@@ -245,7 +282,8 @@ fun SearchTextField(
                 searchQueryState.value = ""
                 keyboardController?.hide()
             }
-        )
-
+        ){
+            //onSearch(searchQueryState.value.trim())  // for continue search when writing
+        }
     }
 }

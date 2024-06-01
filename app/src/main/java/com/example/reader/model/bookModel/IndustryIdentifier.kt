@@ -1,4 +1,4 @@
-package com.example.reader.model.BookModel
+package com.example.reader.model.bookModel
 
 import androidx.compose.runtime.Immutable
 

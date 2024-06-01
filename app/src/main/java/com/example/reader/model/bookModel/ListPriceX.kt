@@ -1,9 +1,9 @@
-package com.example.reader.model.BookModel
+package com.example.reader.model.bookModel
 
 import androidx.compose.runtime.Immutable
 
 @Immutable
-data class RetailPrice(
+data class ListPriceX(
     val amountInMicros: Long,
     val currencyCode: String
 )

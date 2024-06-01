@@ -1,9 +1,10 @@
-package com.example.reader.model.BookModel
+package com.example.reader.model.bookModel
 
 import androidx.compose.runtime.Immutable
 
+
 @Immutable
-data class Pdf(
+data class Epub(
     val acsTokenLink: String,
     val isAvailable: Boolean
 )

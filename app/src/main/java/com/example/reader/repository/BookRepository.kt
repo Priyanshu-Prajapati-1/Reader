@@ -1,7 +1,7 @@
 package com.example.reader.repository
 
 import com.example.reader.data.Resource
-import com.example.reader.model.BookModel.Item
+import com.example.reader.model.bookModel.Item
 import com.example.reader.network.BooksApi
 import javax.inject.Inject
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,6 +78,7 @@ fun HomeScreen(
     },
         modifier = Modifier
             .shadow(elevation = 5.dp)
+            .systemBarsPadding()
     ) {
         Surface(
             modifier = Modifier
@@ -93,9 +96,6 @@ fun HomeContent(
     viewModel: HomeScreenViewModel
 ) {
 
-    val scope = rememberCoroutineScope()
-
-
     var listOfBooks = emptyList<MBook>()
     val currentUser = FirebaseAuth.getInstance().currentUser
 
@@ -105,8 +105,8 @@ fun HomeContent(
         }
     }
 
-    scope.launch {
-        delay(450)
+    LaunchedEffect(key1 = true) {
+        delay(400)
     }
 
     Column(

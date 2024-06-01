@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import com.example.reader.data.Resource
-import com.example.reader.model.BookModel.Item
+import com.example.reader.model.bookModel.Item
 import com.example.reader.model.MBook
 import com.example.reader.repository.BookRepository
 import com.google.firebase.Firebase

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -32,7 +31,6 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -127,11 +125,15 @@ fun InputField(
     isSingleLine: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
+    onAction: KeyboardActions = KeyboardActions.Default,
+    onValueChange: () -> Unit = {}
 ) {
     OutlinedTextField(
         value = valueState.value,
-        onValueChange = { valueState.value = it },
+        onValueChange = {
+            valueState.value = it
+            onValueChange()
+        },
         label = {
             Text(
                 text = labelId,
@@ -141,10 +143,10 @@ fun InputField(
         singleLine = isSingleLine,
         textStyle = TextStyle(
             fontSize = 18.sp,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            lineHeight = 18.sp
         ),
         modifier = modifier
-            .padding(bottom = 10.dp, start = 20.dp, end = 20.dp)
             .fillMaxWidth(),
         enabled = enabled,
         shape = RoundedCornerShape(10.dp),
@@ -250,7 +252,8 @@ fun ReaderAppBar(
                     }
                 }) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout, contentDescription = "logout icon",
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "logout icon",
                         tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
                     )
                 }

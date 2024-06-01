@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -25,7 +26,7 @@ class LoginScreenViewModel : ViewModel() {
 
     // run away from main thread.
     fun signInWithEmailAndPassword(email: String, password: String, home: () -> Unit) =
-        viewModelScope.launch {
+        viewModelScope.launch() {
             onWrongEmailPassword.value = false
             try {
                 auth.signInWithEmailAndPassword(email, password)

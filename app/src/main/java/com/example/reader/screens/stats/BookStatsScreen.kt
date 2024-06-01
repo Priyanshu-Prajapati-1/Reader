@@ -14,15 +14,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +60,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = hiltViewModel()) {
 
     Scaffold(
+        modifier = Modifier
+            .systemBarsPadding(),
         topBar = {
             Surface(
                 modifier = Modifier
@@ -228,10 +234,7 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel = h
 @Composable
 fun BookRow(book: MBook, navController: NavController) {
 
-    val imageUrl = book.photoUrl?.ifEmpty {
-        // "http://books.google.com/books/content?id=ZthJlG4o-2wC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api"
-        R.drawable.book_image
-    }
+    val imageUrl = if (book.photoUrl != null) book.photoUrl else R.drawable.book_image
 
     Card(
         modifier = Modifier
@@ -270,40 +273,60 @@ fun BookRow(book: MBook, navController: NavController) {
             )
             Spacer(modifier = Modifier.width(15.dp))
 
-            Column(
-                modifier = Modifier.padding(vertical = 7.dp, horizontal = 5.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
-                Text(
-                    text = book.title.toString(), overflow = TextOverflow.Clip,
-                    style = TextStyle(
-                        fontSize = 15.sp,
-                        fontStyle = FontStyle.Normal,
-                        fontWeight = FontWeight.Medium
+
+                if(book.rating!! > 3.0){
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Star",
+                        modifier = Modifier
+                            .padding(5.dp)
+                            .align(
+                            Alignment.BottomEnd
+                        ),
+                        tint = Color.Yellow
                     )
-                )
-                Text(
-                    text = "Author: ${book.author.toString()}", overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                }
+
+                Column(
+                    modifier = Modifier.padding(vertical = 7.dp, horizontal = 5.dp)
+                ) {
+                    Text(
+                        text = book.title.toString(), overflow = TextOverflow.Clip,
+                        style = TextStyle(
+                            fontSize = 15.sp,
+                            fontStyle = FontStyle.Normal,
+                            fontWeight = FontWeight.Medium
+                        )
                     )
-                )
-                Text(
-                    text = "Started: ${book.startReading?.let { formatDate(it) }}",
-                    overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        fontStyle = FontStyle.Italic
-                    ),
-                    textDecoration = TextDecoration.Underline
-                )
-                Text(
-                    text = "Finished: ${book.finishedReading?.let { formatDate(it) }}",
-                    overflow = TextOverflow.Ellipsis,
-                    style = TextStyle(
-                        fontSize = 14.sp
+                    Text(
+                        text = "Author: ${book.author.toString()}",
+                        overflow = TextOverflow.Ellipsis,
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
-                )
+                    Text(
+                        text = "Started: ${book.startReading?.let { formatDate(it) }}",
+                        overflow = TextOverflow.Ellipsis,
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontStyle = FontStyle.Italic
+                        ),
+                        textDecoration = TextDecoration.Underline
+                    )
+                    Text(
+                        text = "Finished: ${book.finishedReading?.let { formatDate(it) }}",
+                        overflow = TextOverflow.Ellipsis,
+                        style = TextStyle(
+                            fontSize = 14.sp
+                        )
+                    )
+                }
             }
         }
     }

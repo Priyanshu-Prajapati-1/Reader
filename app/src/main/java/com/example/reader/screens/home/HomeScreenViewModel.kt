@@ -44,7 +44,6 @@ class HomeScreenViewModel @Inject constructor(private val repository: FireReposi
                 data.value = DataOrException(listOf(), false, e)
             }
         }
-        // Log.d("data", "getAllBooksFromDatabase: ${data.value.data?.toList().toString()}")
     }
 
 }

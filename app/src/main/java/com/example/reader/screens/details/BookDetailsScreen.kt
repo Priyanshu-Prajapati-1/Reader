@@ -16,16 +16,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,19 +49,18 @@ import androidx.core.text.HtmlCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.SubcomposeAsyncImage
+import com.example.reader.R
 import com.example.reader.components.ReaderAppBar
 import com.example.reader.components.RoundedButton
 import com.example.reader.components.showToast
 import com.example.reader.data.Resource
-import com.example.reader.model.BookModel.Item
 import com.example.reader.model.MBook
-import com.example.reader.screens.home.HomeScreenViewModel
+import com.example.reader.model.bookModel.Item
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 
-@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 fun BookDetailsScreen(
@@ -72,6 +70,8 @@ fun BookDetailsScreen(
 ) {
 
     Scaffold(
+        modifier = Modifier
+            .systemBarsPadding(),
         topBar = {
             Surface(
                 modifier = Modifier
@@ -106,19 +106,30 @@ fun BookDetailsScreen(
         }.value
 
         val bookData = bookInfo.data?.volumeInfo
-        val imageUrl = bookData?.imageLinks?.smallThumbnail
+//        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTudN8Com396LDgdLI1R57J7754r1KnnFWHAA&s"
+        val imageUrl =
+            if (bookData?.imageLinks?.smallThumbnail != null) bookData.imageLinks.smallThumbnail else R.drawable.book_image
         val googleBookId = bookInfo.data?.id
+        val title = if (bookData?.title != null) bookData.title else ""
+        val author = if (bookData?.authors != null) bookData.authors.toString() else ""
+        val subtitle = if (bookData?.subtitle != null) bookData.subtitle else ""
+        val categories = if (bookData?.categories != null) bookData.categories else listOf("")
+        val publisher = if (bookData?.publisher != null) bookData.publisher else ""
+        val publishedDate = if (bookData?.publishedDate != null) bookData.publishedDate else ""
+        val pageCount = if (bookData?.pageCount != null) bookData.pageCount.toString() else ""
+        val description = if (bookData?.description != null) bookData.description else ""
+        val photoUrl =if (bookData?.imageLinks?.smallThumbnail != null) bookData.imageLinks.smallThumbnail else "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTudN8Com396LDgdLI1R57J7754r1KnnFWHAA&s"
 
         val book = MBook(
-            title = bookData?.title,
-            author = bookData?.authors.toString(),
-            description = bookData?.description,
-            categories = bookData?.categories.toString(),
+            title = title,
+            author = author,
+            description = description,
+            categories = categories.toString(),
             notes = "",
-            photoUrl = bookData?.imageLinks?.thumbnail,
-            publishedDate = bookData?.publishedDate,
+            photoUrl = photoUrl,
+            publishedDate = publishedDate,
             rating = 0.0,
-            pageCount = bookData?.pageCount.toString(),
+            pageCount = pageCount,
             googleBookId = googleBookId,
             userId = FirebaseAuth.getInstance().currentUser?.uid.toString()
         )
@@ -197,7 +208,7 @@ fun BookDetailsScreen(
                                     .padding(horizontal = 10.dp)
                             ) {
                                 Text(
-                                    text = bookData.title,
+                                    text = title,
                                     style = TextStyle(
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.W400
@@ -205,7 +216,7 @@ fun BookDetailsScreen(
                                     )
                                 )
                                 Text(
-                                    text = "Author: " + bookData.authors.toString(),
+                                    text = author,
                                     style = TextStyle(
                                         fontSize = 18.sp,
                                         fontWeight = FontWeight.W400
@@ -213,16 +224,14 @@ fun BookDetailsScreen(
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(5.dp))
-                                bookData.subtitle?.let { subtitle ->
-                                    Text(
-                                        text = subtitle,
-                                        style = TextStyle(
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.W400
+                                Text(
+                                    text = subtitle,
+                                    style = TextStyle(
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.W400
 
-                                        )
                                     )
-                                }
+                                )
 
                             }
 
@@ -230,7 +239,7 @@ fun BookDetailsScreen(
                                 modifier = Modifier
                                     .padding(20.dp)
                             ) {
-                                for (category in bookData.categories) {
+                                for (category in categories) {
                                     Text(
                                         text = ": $category",
                                         style = TextStyle(
@@ -249,21 +258,21 @@ fun BookDetailsScreen(
                                         .padding(8.dp)
                                 ) {
                                     Text(
-                                        text = "Publisher: " + bookData.publisher,
+                                        text = "Publisher: $publisher",
                                         style = TextStyle(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.W400,
                                         )
                                     )
                                     Text(
-                                        text = "Published Date: " + bookData.publishedDate,
+                                        text = "Published Date: $publishedDate",
                                         style = TextStyle(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.W400,
                                         )
                                     )
                                     Text(
-                                        text = "Pages: " + bookData.pageCount.toString(),
+                                        text = "Pages: $pageCount",
                                         style = TextStyle(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.W400,
@@ -301,7 +310,7 @@ fun BookDetailsScreen(
                                 ) {}
 
                                 val contentDescription = HtmlCompat.fromHtml(
-                                    bookData.description,
+                                    bookData.description ?: "No Description",
                                     HtmlCompat.FROM_HTML_MODE_LEGACY
                                 ).toString()
                                 Text(
@@ -376,9 +385,4 @@ fun saveToFirebase(book: MBook, navController: NavController, ifBookExist: Mutab
                 }
             }
         }
-}
-
-@Composable
-fun ShowDialog() {
-
 }

@@ -11,7 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.reader.screens.SplashScreen
+import com.example.reader.screens.splash.SplashScreen
 import com.example.reader.screens.details.BookDetailsScreen
 import com.example.reader.screens.home.HomeScreen
 import com.example.reader.screens.home.HomeScreenViewModel

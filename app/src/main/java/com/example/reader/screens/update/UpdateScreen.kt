@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +34,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -85,6 +87,8 @@ fun UpdateScreen(
 ) {
 
     Scaffold(
+        modifier = Modifier
+            .systemBarsPadding(),
         topBar = {
             Surface(
                 modifier = Modifier
@@ -144,17 +148,21 @@ fun UpdateScreen(
                                 .fillMaxWidth(),
                             shadowElevation = 5.dp,
                         ) {
-                            ShowUpdateBook(bookInfo = viewModel.data.value, bookItemId = bookItemId, navController = navController)
+                            ShowUpdateBook(
+                                bookInfo = viewModel.data.value,
+                                bookItemId = bookItemId,
+                                navController = navController
+                            )
                         }
 
-                        /*ShowSimpleForm(book = viewModel.data.value.data?.first { mBook ->
+                        ShowSimpleForm(book = viewModel.data.value.data?.first { mBook ->
                             mBook.googleBookId == bookItemId
-                        }!!, navController)*/
+                        }!!, navController)
 
-                        viewModel.data.value.data?.firstOrNull { mBook -> mBook.googleBookId == bookItemId }
+                       /* viewModel.data.value.data?.firstOrNull { mBook -> mBook.googleBookId == bookItemId }
                             ?.let { book ->
                                 ShowSimpleForm(book = book, navController = navController)
-                            }
+                            }*/
 
                     }
                 }
@@ -169,25 +177,24 @@ fun UpdateScreen(
 @Composable
 fun ShowSimpleForm(book: MBook, navController: NavController) {
 
-    var notesText by remember {
+    var notesText by rememberSaveable {
         mutableStateOf("")
     }
-    var isStartedReading by remember {
+    var isStartedReading by rememberSaveable {
         mutableStateOf(false)
     }
-    var isFinishedReading by remember {
+    var isFinishedReading by rememberSaveable {
         mutableStateOf(false)
     }
 
-    var ratingValue by remember {
-        mutableStateOf(0)
+    var ratingValue by rememberSaveable {
+        mutableIntStateOf(0)
     }
 
     SimpleForm(
         defaultValue = book.notes.toString().ifEmpty { "No thoughts available :( " }
     ) { notes ->
         notesText = notes
-        //Log.d("notes", notes)
     }
 
     Row(
@@ -460,9 +467,11 @@ fun SimpleForm(
             isSingleLine = false,
             onAction = KeyboardActions {
                 if (!isValid) return@KeyboardActions
-                onSearch(textFieldValue.value.trim())
+                // onSearch(textFieldValue.value.trim())
                 keyboardController?.hide()
-            })
+            }){
+            onSearch(textFieldValue.value.trim())
+        }
     }
 }
 
@@ -501,16 +510,6 @@ fun ShowUpdateBook(
         }
     }
 
-    /*if (bookInfo.data != null) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
-        ) {
-            CardListItem(book = bookInfo.data!!.first { mBook ->
-                mBook.googleBookId == bookItemId
-            }, onPressDetails = {})
-        }
-    }*/
 }
 
 @Composable

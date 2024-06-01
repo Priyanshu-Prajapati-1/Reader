@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,7 +71,7 @@ fun LoginScreen(
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().systemBarsPadding(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
@@ -183,13 +184,16 @@ fun UserForm(
         }
 
         EmailInput(
+            modifier = Modifier.padding(bottom = 10.dp, start = 20.dp, end = 20.dp),
             emailState = email,
             enabled = !loading,
             onAction = KeyboardActions { passwordFocusRequest.requestFocus() }
         )
 
         PasswordInput(
-            modifier = Modifier.focusRequester(passwordFocusRequest),
+            modifier = Modifier
+                .focusRequester(passwordFocusRequest)
+                .padding(bottom = 10.dp, start = 20.dp, end = 20.dp),
             passwordState = password,
             labelId = "Password",
             enabled = !loading,
@@ -269,7 +273,7 @@ fun SubmitButton(
 
 @Composable
 fun PasswordInput(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     passwordState: MutableState<String>,
     labelId: String,
     enabled: Boolean,
@@ -298,7 +302,6 @@ fun PasswordInput(
             color = MaterialTheme.colorScheme.onBackground
         ),
         modifier = modifier
-            .padding(bottom = 10.dp, start = 20.dp, end = 20.dp)
             .fillMaxWidth(),
         enabled = enabled,
         keyboardOptions = KeyboardOptions(

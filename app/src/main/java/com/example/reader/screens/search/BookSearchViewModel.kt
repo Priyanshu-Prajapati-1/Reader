@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.reader.data.Resource
-import com.example.reader.model.BookModel.Item
+import com.example.reader.model.bookModel.Item
 import com.example.reader.repository.BookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,12 +27,12 @@ class BookSearchViewModel @Inject constructor(private val repository: BookReposi
     }
 
     private fun loadBooks() {
-        searchBooks("android")
+        searchBooks("fun")
     }
 
-    fun searchBooks(query: String) {
+    fun searchBooks(query: String ) {
         isLoading = true
-        viewModelScope.launch(Dispatchers.Default) {
+        viewModelScope.launch(Dispatchers.IO) {
             if (query.isEmpty()) {
                 return@launch
             }
@@ -60,28 +60,4 @@ class BookSearchViewModel @Inject constructor(private val repository: BookReposi
             }
         }
     }
-
-
-//    val listOfBooks: MutableState<DataOrException<List<Item>, Boolean, Exception>> =
-//        mutableStateOf(DataOrException(null, true, Exception("")))
-//
-//    init {
-//        searchBooks("android")
-//    }
-//
-//    fun searchBooks(query: String) {
-//        viewModelScope.launch {
-//            if (query.isEmpty()) {
-//                return@launch
-//            }
-//            listOfBooks.value.loading = true
-//            listOfBooks.value = repository.getBooks(query)
-//
-//            Log.d("tag", "search books: ${listOfBooks.value.data.toString()}")
-//
-//            if (listOfBooks.value.data.toString().isNotEmpty()) {
-//                listOfBooks.value.loading = false
-//            }
-//        }
-//    }
 }

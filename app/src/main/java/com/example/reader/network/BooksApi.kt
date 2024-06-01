@@ -1,7 +1,7 @@
 package com.example.reader.network
 
-import com.example.reader.model.BookModel.Book
-import com.example.reader.model.BookModel.Item
+import com.example.reader.model.bookModel.Book
+import com.example.reader.model.bookModel.Item
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query

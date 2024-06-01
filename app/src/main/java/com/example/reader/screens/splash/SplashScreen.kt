@@ -1,4 +1,4 @@
-package com.example.reader.screens
+package com.example.reader.screens.splash
 
 import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
